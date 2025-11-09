@@ -13,7 +13,7 @@ const { calculateTotalScore } = require('../utils/scoring.js');
 
 // -----------------------------------------------------------------------
 // ROUTE 1: Create or Update an Assessment (Sheet 1)
-// URL: POST http://localhost:5000/api/assessments/
+// URL: POST http://localhost:5000/api/.../api/.../api/assessments/
 // This route is PROTECTED. Only a logged-in mentor can do this.
 // -----------------------------------------------------------------------
 router.post('/', protect, async (req, res) => {
@@ -67,7 +67,7 @@ router.post('/', protect, async (req, res) => {
 
 // -----------------------------------------------------------------------
 // ROUTE 2: Get a student's assessment data
-// URL: GET http://localhost:5000/api/assessments/:studentId
+// URL: GET http://localhost:5000/api/.../api/.../api/assessments/:studentId
 // -----------------------------------------------------------------------
 router.get('/:studentId', protect, async (req, res) => {
   try {
@@ -95,7 +95,7 @@ router.get('/:studentId', protect, async (req, res) => {
 
 // -----------------------------------------------------------------------
 // ROUTE 3: Get Performance Report for a Mentor's Mentees
-// URL: GET http://localhost:5000/api/assessments/mentor/performance
+// URL: GET http://localhost:5000/api/.../api/.../api/assessments/mentor/performance
 // This route is PROTECTED.
 // -----------------------------------------------------------------------
 router.get('/mentor/performance', protect, async (req, res) => {

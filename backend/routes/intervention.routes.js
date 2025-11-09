@@ -10,7 +10,7 @@ const { protect } = require('../middleware/auth.middleware.js');
 
 // -----------------------------------------------------------------------
 // ROUTE 1: Add a new intervention (Sheet 2)
-// URL: POST http://localhost:5000/api/interventions/
+// URL: POST http://localhost:5000/api/.../api/.../api/interventions/
 // -----------------------------------------------------------------------
 router.post('/', protect, async (req, res) => {
   try {
@@ -47,7 +47,7 @@ router.post('/', protect, async (req, res) => {
 
 // -----------------------------------------------------------------------
 // ROUTE 2: Get all interventions for one student
-// URL: GET http://localhost:5000/api/interventions/:studentId
+// URL: GET http://localhost:5000/api/.../api/.../api/interventions/:studentId
 // -----------------------------------------------------------------------
 router.get('/:studentId', protect, async (req, res) => {
   try {

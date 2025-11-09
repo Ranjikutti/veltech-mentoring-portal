@@ -95,7 +95,7 @@ router.get('/:studentId/details', protect, async (req, res) => {
 
 // -----------------------------------------------------------
 // ROUTE 5: Re-assign a new mentor to a student (HOD ONLY)
-// URL: PUT http://localhost:5000/api/students/:studentId/assign-mentor
+// URL: PUT http://localhost:5000/api/.../api/.../api/students/:studentId/assign-mentor
 // -----------------------------------------------------------
 router.put('/:studentId/assign-mentor', protect, isHod, async (req, res) => {
   try {

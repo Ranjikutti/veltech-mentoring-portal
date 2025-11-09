@@ -178,7 +178,7 @@ router.delete('/mentor/:mentorId', protect, isHod, async (req, res) => {
 
 // -----------------------------------------------------------
 // ROUTE 6: Get a single mentor's details (HOD ONLY)
-// URL: GET http://localhost:5000/api/users/mentor/:mentorId
+// URL: GET http://localhost:5000/api/.../api/.../api/users/mentor/:mentorId
 // -----------------------------------------------------------
 router.get('/mentor/:mentorId', protect, isHod, async (req, res) => {
   try {
@@ -196,7 +196,7 @@ router.get('/mentor/:mentorId', protect, isHod, async (req, res) => {
 
 // -----------------------------------------------------------
 // ROUTE 7: Update a mentor's details (HOD ONLY)
-// URL: PUT http://localhost:5000/api/users/mentor/:mentorId
+// URL: PUT http://localhost:5000/api/.../api/.../api/users/mentor/:mentorId
 // -----------------------------------------------------------
 router.put('/mentor/:mentorId', protect, isHod, async (req, res) => {
   try {
