@@ -12,14 +12,11 @@ function MenteeDetailsPage() {
   const [error, setError] = useState('')
   const { studentId } = useParams()
   const { user } = useAuth()
-
-  // --- NEW STATE ---
-  // This will control which assessment we are editing (or null for a new one)
+  
+  // State for Edit/Delete logic
   const [editingAssessment, setEditingAssessment] = useState(null);
-  // This controls if the form is shown or hidden
   const [showAssessmentForm, setShowAssessmentForm] = useState(false);
 
-  // --- (This function is unchanged) ---
   const fetchStudentDetails = useCallback(async () => {
     setLoading(true)
     try {
@@ -36,13 +33,10 @@ function MenteeDetailsPage() {
     fetchStudentDetails()
   }, [fetchStudentDetails])
 
-  // --- NEW: Handle Delete Assessment ---
   const handleDeleteAssessment = async (assessmentId) => {
     if (window.confirm('Are you sure you want to delete this assessment record?')) {
       try {
-        // We will create this API route in Step 3
         await api.delete(`/assessments/${assessmentId}`);
-        // Refresh the student data to show the deletion
         fetchStudentDetails(); 
       } catch (err) {
         alert('Failed to delete assessment.');
@@ -50,37 +44,57 @@ function MenteeDetailsPage() {
     }
   }
   
-  // --- NEW: Handle clicks on the buttons ---
   const handleAddNewClick = () => {
-    setEditingAssessment(null); // Set to null for a new entry
-    setShowAssessmentForm(true); // Show the form
+    setEditingAssessment(null); 
+    setShowAssessmentForm(true); 
   }
 
   const handleEditClick = (assessment) => {
-    setEditingAssessment(assessment); // Set to the specific assessment
-    setShowAssessmentForm(true); // Show the form
+    setEditingAssessment(assessment); 
+    setShowAssessmentForm(true); 
   }
 
   const handleFormSave = () => {
-    setShowAssessmentForm(false); // Hide the form on save
-    fetchStudentDetails(); // Refresh the data
+    setShowAssessmentForm(false); 
+    fetchStudentDetails(); 
   }
 
   const handleFormCancel = () => {
-    setShowAssessmentForm(false); // Hide the form on cancel
+    setShowAssessmentForm(false); 
   }
 
-  // --- (Loading/Error/Empty states are unchanged) ---
-  if (loading) { /* ... */ }
-  if (error) { /* ... */ }
-  if (!student) { /* ... */ }
+  if (loading) {
+    return (
+      <div className="mdp-wrap loading">
+        <div className="spin" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="mdp-wrap error">
+        <div className="err">{error}</div>
+      </div>
+    )
+  }
+
+  // --- THIS IS THE CRASH FIX ---
+  // We make the check stronger. We check for student AND student.profile.
+  if (!student || !student.profile) {
+  // -----------------------------
+    return (
+      <div className="mdp-wrap empty">
+        <div className="box">No student data found.</div>
+      </div>
+    )
+  }
 
   return (
     <div className="mdp">
       <div className="container">
         <Link to="/dashboard" className="back">← Back to Dashboard</Link>
 
-        {/* --- (HOD Section is unchanged) --- */}
         {user && user.role === 'hod' && (
           <div className="section" style={{marginTop: '18px', background: 'rgba(239, 68, 68, .08)', border: '1px solid rgba(239, 68, 68, .4)'}}>
             <HodMentorSwitch 
@@ -92,7 +106,6 @@ function MenteeDetailsPage() {
         )}
 
         <div className="grid">
-          {/* --- (Profile Card is unchanged) --- */}
           <div className="card">
             <div className="card-head">
               <h3 className="card-title">Profile</h3>
@@ -105,11 +118,9 @@ function MenteeDetailsPage() {
             </div>
           </div>
 
-          {/* --- ASSESSMENT SECTION (HEAVILY UPDATED) --- */}
           <div className="section">
             <div className="card-head" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 className="card-title">Assessment Data<span className="chip">Sheet 1</span></h3>
-              {/* NEW: Button to show the form */}
               {!showAssessmentForm && (
                 <button onClick={handleAddNewClick} className="form-btn" style={{ margin: 0, fontSize: 12, padding: '6px 10px', background: '#10b981' }}>
                   Add New
@@ -117,21 +128,19 @@ function MenteeDetailsPage() {
               )}
             </div>
             <div className="card-body">
-              {/* NEW: Form is now conditional */}
               {showAssessmentForm ? (
                 <div style={{ marginBottom: 16 }}>
                   <AssessmentForm 
                     studentId={studentId} 
-                    assessmentToEdit={editingAssessment} // Prop to send data to form
-                    onAssessmentAdded={handleFormSave} // Renamed prop
-                    onCancel={handleFormCancel}      // New prop
+                    assessmentToEdit={editingAssessment}
+                    onAssessmentAdded={handleFormSave}
+                    onCancel={handleFormCancel}
                   />
                 </div>
               ) : (
                 student.assessments.length === 0 && <div className="muted">No assessment data found.</div>
               )}
               
-              {/* NEW: List is always visible, but only if form is hidden */}
               {!showAssessmentForm && student.assessments.length > 0 && (
                 <div className="two-col">
                   {student.assessments.map(ass => (
@@ -142,7 +151,6 @@ function MenteeDetailsPage() {
                       </div>
                       <div className="muted">Attendance: {ass.attendancePercent}%</div>
                       
-                      {/* --- NEW: EDIT AND DELETE BUTTONS --- */}
                       <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                         <button onClick={() => handleEditClick(ass)} className="form-btn" style={{ margin: 0, fontSize: 12, padding: '4px 8px', background: '#f59e0b' }}>
                           Edit
@@ -151,7 +159,6 @@ function MenteeDetailsPage() {
                           Delete
                         </button>
                       </div>
-                      {/* --- END OF NEW BUTTONS --- */}
                       
                     </div>
                   ))}
@@ -159,10 +166,7 @@ function MenteeDetailsPage() {
               )}
             </div>
           </div>
-          {/* --- END OF ASSESSMENT SECTION --- */}
 
-
-          {/* --- (Intervention Section is unchanged for now) --- */}
           <div className="section" style={{ gridColumn: '1 / -1' }}>
             <div className="card-head">
               <h3 className="card-title">Intervention Log<span className="chip">Sheet 2</span></h3>
