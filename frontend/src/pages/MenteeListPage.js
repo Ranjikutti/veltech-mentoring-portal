@@ -1,33 +1,39 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react' // Import useCallback
 import { useParams, Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import api from 'api';function MenteeListPage() {
+// import { useAuth } from '../context/AuthContext' // <-- GONE (not needed)
+import api from 'api';
+
+function MenteeListPage() {
   const [mentees, setMentees] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const { mentorId } = useParams()
-  const { token } = useAuth() // --- I FIXED THE TYPO HERE (was 'token }G') ---
+  // const { token } = useAuth() // <-- GONE
 
-  // Fetch mentees
-  const fetchMentees = async () => {
+  // --- FIX 1: Wrap fetchMentees in useCallback ---
+  // This tells React this function only needs to change if 'mentorId' changes.
+  const fetchMentees = useCallback(async () => {
       setLoading(true);
       try {
-        const config = { headers: { Authorization: `Bearer ${token}` } }
-        const response = await api.get(`http://localhost:5000/api/.../api/.../api/students/mentor/${mentorId}`, config)
+        // const config = { ... }; // <-- GONE
+        // URL is short, 'config' is gone
+        const response = await api.get(`/students/mentor/${mentorId}`)
         setMentees(response.data)
         setLoading(false)
       } catch (err) {
         setError('Failed to fetch mentees for this mentor.')
         setLoading(false)
       }
-    }
+    }, [mentorId]); // <-- The dependency for useCallback
 
+  // --- FIX 2: Update useEffect ---
+  // Now it correctly depends on 'fetchMentees'.
+  // It will only run when fetchMentees is (re)created.
   useEffect(() => {
     fetchMentees()
-    // We add fetchMentees to the dependency array
-  }, [token, mentorId]); 
+  }, [fetchMentees]); 
 
-  // --- NEW: Handle Delete Function ---
+  // --- NEW: Handle Delete Function (Also cleaned up) ---
   const handleDelete = async (studentId, studentName) => {
     const confirmDelete = window.prompt(`Type the student's name to delete: "${studentName}"`);
     if (confirmDelete !== studentName) {
@@ -36,9 +42,10 @@ import api from 'api';function MenteeListPage() {
     }
 
     try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      // Call our new DELETE API route
-      await api.delete(`http://localhost:5000/api/.../api/.../api/students/${studentId}`, config);
+      // const config = { ... }; // <-- GONE
+      
+      // URL is short, 'config' is gone
+      await api.delete(`/students/${studentId}`);
       
       // Update the UI by removing the deleted mentee from the list
       setMentees(mentees.filter(mentee => mentee._id !== studentId));
