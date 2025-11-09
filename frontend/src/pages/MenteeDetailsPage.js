@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import api from 'api';import AssessmentForm from '../components/AssessmentForm'
+import api from 'api';
+import AssessmentForm from '../components/AssessmentForm'
 import InterventionForm from '../components/InterventionForm'
 import HodMentorSwitch from '../components/HodMentorSwitch' // Import the switch
 
@@ -10,20 +11,22 @@ function MenteeDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const { studentId } = useParams()
-  const { token, user } = useAuth() // Get the logged-in user
+  const { user } = useAuth() // 'token' is GONE, 'user' is kept
 
   const fetchStudentDetails = useCallback(async () => {
     setLoading(true)
     try {
-      const config = { headers: { Authorization: `Bearer ${token}` } }
-      const response = await api.get(`http://localhost:5000/api/.../api/.../api/students/${studentId}/details`, config)
+      // const config = { ... }; // <-- GONE
+      
+      // URL is short, 'config' is gone
+      const response = await api.get(`/students/${studentId}/details`)
       setStudent(response.data)
       setLoading(false)
     } catch (err) {
       setError('Failed to fetch student details.')
       setLoading(false)
     }
-  }, [token, studentId])
+  }, [studentId]); // 'token' removed from dependency array
 
   useEffect(() => {
     fetchStudentDetails()

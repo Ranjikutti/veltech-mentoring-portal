@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import api from 'api';import { Link } from 'react-router-dom';
+// import { useAuth } from '../context/AuthContext'; // <-- GONE
+import api from 'api';
+import { Link } from 'react-router-dom';
 
 function PerformanceReportPage() {
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { token } = useAuth();
+  // const { token } = useAuth(); // <-- GONE
 
   useEffect(() => {
     const fetchReport = async () => {
       try {
-        const config = {
-          headers: { Authorization: `Bearer ${token}` }
-        };
+        // const config = { ... }; // <-- GONE
+
         // Call the API we just tested!
-        const response = await api.get('http://localhost:5000/api/.../api/.../api/assessments/mentor/performance', config);
+        // URL is short, 'config' is gone
+        const response = await api.get('/assessments/mentor/performance');
         setReportData(response.data); // Save the ranked list
         setLoading(false);
       } catch (err) {
@@ -24,7 +25,7 @@ function PerformanceReportPage() {
       }
     };
     fetchReport();
-  }, [token]);
+  }, []); // Dependency array is now empty
 
   if (loading) {
     return (
