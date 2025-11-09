@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import api from 'api';import { useParams, useNavigate, Link } from 'react-router-dom';
+// import { useAuth } from '../context/AuthContext'; // <-- GONE
+import api from 'api';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 
 function EditMentorPage() {
-  const { token } = useAuth();
+  // const { token } = useAuth(); // <-- GONE
   const { mentorId } = useParams(); // Get mentor ID from URL
   const navigate = useNavigate();
   
@@ -21,9 +22,10 @@ function EditMentorPage() {
   useEffect(() => {
     const fetchMentor = async () => {
       try {
-        const config = { headers: { Authorization: `Bearer ${token}` } };
-        // Call our new GET /api/users/mentor/:mentorId route
-        const response = await api.get(`http://localhost:5000/api/.../api/.../api/users/mentor/${mentorId}`, config);
+        // const config = { ... }; // <-- GONE
+        
+        // URL is short, 'config' is gone
+        const response = await api.get(`/users/mentor/${mentorId}`);
         setFormData(response.data); // Fill the form with current data
         setLoading(false);
       } catch (err) {
@@ -32,7 +34,7 @@ function EditMentorPage() {
       }
     };
     fetchMentor();
-  }, [token, mentorId]);
+  }, [mentorId]); // 'token' removed from dependency array
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -44,9 +46,10 @@ function EditMentorPage() {
     setError('');
     setMessage('');
     try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      // Call our new PUT /api/users/mentor/:mentorId route
-      const response = await api.put(`http://localhost:5000/api/.../api/.../api/users/mentor/${mentorId}`, formData, config);
+      // const config = { ... }; // <-- GONE
+      
+      // URL is short, 'config' is gone
+      const response = await api.put(`/users/mentor/${mentorId}`, formData);
       
       setMessage(`Success! Mentor ${response.data.name} updated.`);
       setTimeout(() => navigate('/dashboard'), 1500); // Go back after 1.5s
