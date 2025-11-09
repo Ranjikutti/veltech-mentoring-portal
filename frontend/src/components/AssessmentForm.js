@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'; // Added useEffect
+import React, { useState, useEffect } from 'react';
 import api from 'api';
 
-// --- I've added your dark mode styles to the form ---
+// --- (Styles are unchanged) ---
 const styles = `
   .form-card {
     border: 1px solid rgba(255, 255, 255, .12);
@@ -90,7 +90,7 @@ const styles = `
   @keyframes pop{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
 `;
 
-// --- NEW: Helper function to get the default empty form state ---
+// --- (Helper functions are unchanged) ---
 const getDefaultFormData = () => ({
   academicYear: '1st Year - Sem 1',
   cgpa: 0,
@@ -108,8 +108,6 @@ const getDefaultFormData = () => ({
   nssP: 0, nssW: 0,
 });
 
-// --- NEW: Helper function to flatten data for the form ---
-// This turns { workshop: { participated: 5 } } into { workshopP: 5 }
 const flattenData = (data) => ({
   academicYear: data.academicYear || '1st Year - Sem 1',
   cgpa: data.cgpa || 0,
@@ -143,18 +141,14 @@ const flattenData = (data) => ({
 });
 
 
-// --- PROPS ARE UPDATED ---
+// --- (Props are unchanged) ---
 function AssessmentForm({ studentId, onAssessmentAdded, onCancel, assessmentToEdit = null }) {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-
-  // --- 1. Set up state for ALL fields ---
-  // It now starts empty or with the data to edit
   const [formData, setFormData] = useState(
     assessmentToEdit ? flattenData(assessmentToEdit) : getDefaultFormData()
   );
 
-  // --- NEW: useEffect to fill form when 'assessmentToEdit' prop changes ---
   useEffect(() => {
     if (assessmentToEdit) {
       setFormData(flattenData(assessmentToEdit));
@@ -176,7 +170,7 @@ function AssessmentForm({ studentId, onAssessmentAdded, onCancel, assessmentToEd
     setMessage('');
 
     try {
-      // --- (Build the body - this logic is unchanged) ---
+      // --- (Body creation is unchanged) ---
       const body = {
         studentId: studentId,
         academicYear: formData.academicYear,
@@ -230,11 +224,13 @@ function AssessmentForm({ studentId, onAssessmentAdded, onCancel, assessmentToEd
         }
       };
 
-      const response = await api.post('/assessments', body);
+      // --- THIS IS THE FIX ---
+      // We removed "const response =" because it was unused.
+      await api.post('/assessments', body);
+      // ----------------------
       
       setMessage(assessmentToEdit ? 'Success! Assessment updated.' : 'Success! Assessment saved.');
       
-      // Call the onAssessmentAdded prop (which now hides the form)
       onAssessmentAdded(); 
 
     } catch (err) {
@@ -246,7 +242,6 @@ function AssessmentForm({ studentId, onAssessmentAdded, onCancel, assessmentToEd
     <form onSubmit={handleSubmit} className="form-card">
       <style>{styles}</style>
       
-      {/* --- NEW: Dynamic Title --- */}
       <h4 className="form-title">
         {assessmentToEdit ? `Editing: ${assessmentToEdit.academicYear}` : 'Add New Assessment'}
       </h4>
@@ -256,14 +251,13 @@ function AssessmentForm({ studentId, onAssessmentAdded, onCancel, assessmentToEd
         {/* --- Academics --- */}
         <div className="field">
           <label className="label">Academic Year</label>
-          {/* --- NEW: Disabled when editing --- */}
           <input 
             type="text" 
             name="academicYear" 
             value={formData.academicYear} 
             onChange={handleChange} 
             className="input" 
-            disabled={!!assessmentToEdit} // Disable if in edit mode
+            disabled={!!assessmentToEdit}
           />
         </div>
         <div className="field">
@@ -406,7 +400,7 @@ function AssessmentForm({ studentId, onAssessmentAdded, onCancel, assessmentToEd
 
       </div>
 
-      {/* --- NEW: Button Group --- */}
+      {/* --- (Button group is unchanged) --- */}
       <div style={{ display: 'flex', gap: '10px' }}>
         <button type="submit" className="form-btn">
           {assessmentToEdit ? 'Update Assessment' : 'Save Assessment'}
