@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1020" />
+    <meta name="description" content="Mentoring Portal" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+    <title>Mentoring Portal</title>
+    <style>
+      :root{--bg1:#0b1020;--bg2:#0f172a;--ring:#38bdf8;--text:#e5e7eb;--muted:#94a3b8}
+      *{box-sizing:border-box}
+      html,body,#root{height:100%}
+      html{color-scheme:dark}
+      body{margin:0;font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,Helvetica,sans-serif;background:var(--bg1);color:var(--text);overflow-x:hidden}
+      .app-bg{position:fixed;inset:0;z-index:-1;background:
+        radial-gradient(1200px 800px at 20% -10%,#334155 0%,transparent 60%),
+        radial-gradient(900px 600px at 120% 10%,#0ea5e9 0%,transparent 60%),
+        linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 60%,var(--bg1) 100%);
+        filter:saturate(1.05) hue-rotate(0deg);animation:bgShift 14s ease-in-out infinite alternate}
+      @keyframes bgShift{0%{filter:saturate(1.05) hue-rotate(0deg)}100%{filter:saturate(1.15) hue-rotate(10deg)}}
+      a{color:inherit}
+      button,input,select,textarea{font-family:inherit}
+      ::selection{background:rgba(56,189,248,.35)}
+      .container{max-width:1200px;margin:0 auto;padding:0 16px}
+    </style>
+  </head>
+  <body>
+    <div class="app-bg"></div>
+    <div id="root"></div>
+  </body>
+</html>
