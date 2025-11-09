@@ -13,8 +13,7 @@ const { calculateTotalScore } = require('../utils/scoring.js');
 
 // -----------------------------------------------------------------------
 // ROUTE 1: Create or Update an Assessment (Sheet 1)
-// URL: POST http://localhost:5000/api/.../api/.../api/assessments/
-// This route is PROTECTED. Only a logged-in mentor can do this.
+// URL: POST /api/assessments/
 // -----------------------------------------------------------------------
 router.post('/', protect, async (req, res) => {
   try {
@@ -26,24 +25,15 @@ router.post('/', protect, async (req, res) => {
     } = req.body;
 
     // --- Security Check ---
-    // 1. Find the student
     const student = await Student.findById(studentId);
     if (!student) {
       return res.status(404).json({ message: 'Student not found.' });
     }
-
-    // 2. Check if the logged-in mentor is the student's current mentor
-    // We compare the IDs. .equals() is the safe way to compare Mongoose IDs.
     if (!student.currentMentor.equals(mentorId)) {
       return res.status(403).json({ message: 'You are not authorized to edit this student.' });
     }
 
     // --- "Upsert" Logic ---
-    // This is the "smart" part.
-    // It finds an assessment for this student AND year.
-    // If it exists, it updates it.
-    // If it doesn't exist, it creates it (upsert: true).
-    
     const updatedAssessment = await Assessment.findOneAndUpdate(
       { studentId: studentId, academicYear: academicYear }, // Find by this
       { ...rawData, studentId, academicYear }, // Set this data
@@ -51,10 +41,8 @@ router.post('/', protect, async (req, res) => {
     );
 
     // --- Scoring Logic ---
-    // Now that the data is saved, we calculate the scores to send back
     const scores = calculateTotalScore(updatedAssessment);
 
-    // Send back both the saved data and the calculated scores
     res.status(200).json({
       savedData: updatedAssessment,
       calculatedScores: scores
@@ -67,20 +55,18 @@ router.post('/', protect, async (req, res) => {
 
 // -----------------------------------------------------------------------
 // ROUTE 2: Get a student's assessment data
-// URL: GET http://localhost:5000/api/.../api/.../api/assessments/:studentId
+// URL: GET /api/assessments/:studentId
 // -----------------------------------------------------------------------
 router.get('/:studentId', protect, async (req, res) => {
   try {
     const { studentId } = req.params;
 
-    // Find all assessments for this student
     const assessments = await Assessment.find({ studentId: studentId });
 
     if (!assessments) {
       return res.status(404).json({ message: 'No assessments found for this student.' });
     }
 
-    // We can also calculate scores for each assessment
     const assessmentsWithScores = assessments.map(doc => {
       const scores = calculateTotalScore(doc);
       return { savedData: doc, calculatedScores: scores };
@@ -95,39 +81,32 @@ router.get('/:studentId', protect, async (req, res) => {
 
 // -----------------------------------------------------------------------
 // ROUTE 3: Get Performance Report for a Mentor's Mentees
-// URL: GET http://localhost:5000/api/.../api/.../api/assessments/mentor/performance
-// This route is PROTECTED.
+// URL: GET /api/assessments/mentor/performance
 // -----------------------------------------------------------------------
 router.get('/mentor/performance', protect, async (req, res) => {
   try {
     const mentorId = req.user._id; // Get logged-in mentor
 
-    // 1. Find all students for this mentor
     const mentees = await Student.find({ currentMentor: mentorId })
-                                 .select('_id name registerNumber');
+                          .select('_id name registerNumber');
 
-    // 2. For each mentee, find their latest assessment and calculate score
     const performanceData = [];
 
-    // We use Promise.all to run all these database lookups at the same time
     await Promise.all(mentees.map(async (mentee) => {
-      // Find the most recent assessment for this mentee
       const latestAssessment = await Assessment.findOne({ studentId: mentee._id })
-                                               .sort({ updatedAt: -1 }); // Get the newest one
+                                        .sort({ updatedAt: -1 }); // Get the newest one
 
       if (latestAssessment) {
-        // 3. Use our "brain" to calculate the score
         const scores = calculateTotalScore(latestAssessment);
         
         performanceData.push({
           studentId: mentee._id,
           name: mentee.name,
           registerNumber: mentee.registerNumber,
-          totalScore: scores.totalScore, // Get the final score
-          academicYear: latestAssessment.academicYear // Show which year this score is from
+          totalScore: scores.totalScore,
+          academicYear: latestAssessment.academicYear
         });
       } else {
-        // If no assessment, they get 0
         performanceData.push({
           studentId: mentee._id,
           name: mentee.name,
@@ -138,11 +117,46 @@ router.get('/mentor/performance', protect, async (req, res) => {
       }
     }));
 
-    // 4. Sort the list: "well performer" (highest score) first
     performanceData.sort((a, b) => b.totalScore - a.totalScore);
 
-    // 5. Send the final ranked list
     res.status(200).json(performanceData);
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// -----------------------------------------------------------------------
+// ROUTE 4: Delete an Assessment
+// URL: DELETE /api/assessments/:assessmentId
+// This is the NEW route you needed.
+// -----------------------------------------------------------------------
+router.delete('/:assessmentId', protect, async (req, res) => {
+  try {
+    const mentorId = req.user._id;
+    const { assessmentId } = req.params;
+
+    // 1. Find the assessment
+    const assessment = await Assessment.findById(assessmentId);
+    if (!assessment) {
+      return res.status(404).json({ message: 'Assessment not found.' });
+    }
+
+    // 2. Find the student associated with the assessment
+    const student = await Student.findById(assessment.studentId);
+    if (!student) {
+      return res.status(404).json({ message: 'Associated student not found.' });
+    }
+
+    // 3. Security Check: Ensure the logged-in user is this student's mentor
+    if (!student.currentMentor.equals(mentorId)) {
+      return res.status(403).json({ message: 'You are not authorized to delete this assessment.' });
+    }
+
+    // 4. Delete the assessment
+    await Assessment.findByIdAndDelete(assessmentId);
+
+    res.status(200).json({ message: 'Assessment deleted successfully.' });
 
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

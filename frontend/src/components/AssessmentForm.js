@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-// import { useAuth } from '../context/AuthContext'; // <-- GONE
+import React, { useState, useEffect } from 'react'; // Added useEffect
 import api from 'api';
 
 // --- I've added your dark mode styles to the form ---
@@ -91,33 +90,78 @@ const styles = `
   @keyframes pop{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
 `;
 
-function AssessmentForm({ studentId, onAssessmentAdded }) {
-  // const { token } = useAuth(); // <-- GONE
+// --- NEW: Helper function to get the default empty form state ---
+const getDefaultFormData = () => ({
+  academicYear: '1st Year - Sem 1',
+  cgpa: 0,
+  attendancePercent: 0,
+  workshopP: 0, seminarP: 0,
+  conferenceP: 0, conferencePr: 0, conferenceW: 0,
+  symposiumP: 0, symposiumPr: 0, symposiumW: 0,
+  profBodyP: 0, profBodyPr: 0, profBodyW: 0,
+  talksP: 0, projectExpoPr: 0, projectExpoW: 0,
+  nptelC: 0, nptelMp: 0,
+  otherCertC: 0, otherCertMp: 0,
+  culturalsP: 0, culturalsW: 0,
+  sportsP: 0, sportsW: 0,
+  nccP: 0, nccW: 0,
+  nssP: 0, nssW: 0,
+});
+
+// --- NEW: Helper function to flatten data for the form ---
+// This turns { workshop: { participated: 5 } } into { workshopP: 5 }
+const flattenData = (data) => ({
+  academicYear: data.academicYear || '1st Year - Sem 1',
+  cgpa: data.cgpa || 0,
+  attendancePercent: data.attendancePercent || 0,
+  workshopP: data.workshop?.participated || 0,
+  seminarP: data.seminar?.participated || 0,
+  conferenceP: data.conference?.participated || 0,
+  conferencePr: data.conference?.presented || 0,
+  conferenceW: data.conference?.prizesWon || 0,
+  symposiumP: data.symposium?.participated || 0,
+  symposiumPr: data.symposium?.presented || 0,
+  symposiumW: data.symposium?.prizesWon || 0,
+  profBodyP: data.profBodyActivities?.participated || 0,
+  profBodyPr: data.profBodyActivities?.presented || 0,
+  profBodyW: data.profBodyActivities?.prizesWon || 0,
+  talksP: data.talksLectures?.participated || 0,
+  projectExpoPr: data.projectExpo?.presented || 0,
+  projectExpoW: data.projectExpo?.prizesWon || 0,
+  nptelC: data.nptelSwayam?.completed || 0,
+  nptelMp: data.nptelSwayam?.miniprojects || 0,
+  otherCertC: data.otherCertifications?.completed || 0,
+  otherCertMp: data.otherCertifications?.miniprojects || 0,
+  culturalsP: data.culturals?.participated || 0,
+  culturalsW: data.culturals?.prizesWon || 0,
+  sportsP: data.sports?.participated || 0,
+  sportsW: data.sports?.prizesWon || 0,
+  nccP: data.ncc?.participated || 0,
+  nccW: data.ncc?.prizesWon || 0,
+  nssP: data.nss?.participated || 0,
+  nssW: data.nss?.prizesWon || 0,
+});
+
+
+// --- PROPS ARE UPDATED ---
+function AssessmentForm({ studentId, onAssessmentAdded, onCancel, assessmentToEdit = null }) {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
   // --- 1. Set up state for ALL fields ---
-  const [formData, setFormData] = useState({
-    academicYear: '2nd Year - Sem 3',
-    cgpa: 0,
-    attendancePercent: 0,
-    // Co-Curricular
-    workshopP: 0,
-    seminarP: 0,
-    conferenceP: 0, conferencePr: 0, conferenceW: 0,
-    symposiumP: 0, symposiumPr: 0, symposiumW: 0,
-    profBodyP: 0, profBodyPr: 0, profBodyW: 0,
-    talksP: 0,
-    projectExpoPr: 0, projectExpoW: 0,
-    // Certifications
-    nptelC: 0, nptelMp: 0,
-    otherCertC: 0, otherCertMp: 0,
-    // Extra-Curricular
-    culturalsP: 0, culturalsW: 0,
-    sportsP: 0, sportsW: 0,
-    nccP: 0, nccW: 0,
-    nssP: 0, nssW: 0,
-  });
+  // It now starts empty or with the data to edit
+  const [formData, setFormData] = useState(
+    assessmentToEdit ? flattenData(assessmentToEdit) : getDefaultFormData()
+  );
+
+  // --- NEW: useEffect to fill form when 'assessmentToEdit' prop changes ---
+  useEffect(() => {
+    if (assessmentToEdit) {
+      setFormData(flattenData(assessmentToEdit));
+    } else {
+      setFormData(getDefaultFormData());
+    }
+  }, [assessmentToEdit]);
 
   const handleChange = (e) => {
     setFormData({
@@ -132,16 +176,12 @@ function AssessmentForm({ studentId, onAssessmentAdded }) {
     setMessage('');
 
     try {
-      // const config = { ... }; // <-- GONE
-
-      // --- 2. Build the FULL data object for the API ---
+      // --- (Build the body - this logic is unchanged) ---
       const body = {
         studentId: studentId,
         academicYear: formData.academicYear,
         cgpa: parseFloat(formData.cgpa) || 0,
         attendancePercent: parseInt(formData.attendancePercent) || 0,
-        
-        // Co-Curricular
         workshop: { participated: parseInt(formData.workshopP) || 0 },
         seminar: { participated: parseInt(formData.seminarP) || 0 },
         conference: {
@@ -164,8 +204,6 @@ function AssessmentForm({ studentId, onAssessmentAdded }) {
           presented: parseInt(formData.projectExpoPr) || 0,
           prizesWon: parseInt(formData.projectExpoW) || 0
         },
-
-        // Certifications
         nptelSwayam: {
           completed: parseInt(formData.nptelC) || 0,
           miniprojects: parseInt(formData.nptelMp) || 0
@@ -174,8 +212,6 @@ function AssessmentForm({ studentId, onAssessmentAdded }) {
           completed: parseInt(formData.otherCertC) || 0,
           miniprojects: parseInt(formData.otherCertMp) || 0
         },
-
-        // Extra-Curricular
         culturals: {
           participated: parseInt(formData.culturalsP) || 0,
           prizesWon: parseInt(formData.culturalsW) || 0
@@ -194,11 +230,12 @@ function AssessmentForm({ studentId, onAssessmentAdded }) {
         }
       };
 
-      // URL is short, 'config' is gone
       const response = await api.post('/assessments', body);
       
-      setMessage(`Success! New Total Score: ${response.data.calculatedScores.totalScore}`);
-      onAssessmentAdded(); // Refresh parent page
+      setMessage(assessmentToEdit ? 'Success! Assessment updated.' : 'Success! Assessment saved.');
+      
+      // Call the onAssessmentAdded prop (which now hides the form)
+      onAssessmentAdded(); 
 
     } catch (err) {
       setError('Failed to save assessment. Please check all fields.');
@@ -208,15 +245,26 @@ function AssessmentForm({ studentId, onAssessmentAdded }) {
   return (
     <form onSubmit={handleSubmit} className="form-card">
       <style>{styles}</style>
-      <h4 className="form-title">Add / Update Assessment (Sheet 1)</h4>
       
-      {/* --- 3. The FULL JSX Form --- */}
+      {/* --- NEW: Dynamic Title --- */}
+      <h4 className="form-title">
+        {assessmentToEdit ? `Editing: ${assessmentToEdit.academicYear}` : 'Add New Assessment'}
+      </h4>
+      
       <div className="form-grid">
 
         {/* --- Academics --- */}
         <div className="field">
           <label className="label">Academic Year</label>
-          <input type="text" name="academicYear" value={formData.academicYear} onChange={handleChange} className="input" />
+          {/* --- NEW: Disabled when editing --- */}
+          <input 
+            type="text" 
+            name="academicYear" 
+            value={formData.academicYear} 
+            onChange={handleChange} 
+            className="input" 
+            disabled={!!assessmentToEdit} // Disable if in edit mode
+          />
         </div>
         <div className="field">
           <label className="label">CGPA (e.g., 8.7)</label>
@@ -358,7 +406,16 @@ function AssessmentForm({ studentId, onAssessmentAdded }) {
 
       </div>
 
-      <button type="submit" className="form-btn">Save Assessment</button>
+      {/* --- NEW: Button Group --- */}
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button type="submit" className="form-btn">
+          {assessmentToEdit ? 'Update Assessment' : 'Save Assessment'}
+        </button>
+        <button type="button" onClick={onCancel} className="form-btn" style={{ background: '#64748b' }}>
+          Cancel
+        </button>
+      </div>
+      
       <div className="msg-wrap">
         {error && <p className="msg-err">{error}</p>}
         {message && <p className="msg-ok">{message}</p>}
