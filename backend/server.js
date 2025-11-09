@@ -12,7 +12,16 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // 4. Set up our "middleware" (tools for the engine)
-app.use(cors()); // Allows our React app to talk to this server
+
+// --- THIS IS THE FIX ---
+// Define exactly which URL is allowed to make requests
+const corsOptions = {
+  origin: 'https://veltech-mentoring-portal.vercel.app'
+};
+// Use the new options
+app.use(cors(corsOptions));
+// ----------------------
+
 app.use(express.json()); // Allows the server to understand JSON data
 
 // --- Import our routes ---
