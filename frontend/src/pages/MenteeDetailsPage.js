@@ -53,12 +53,10 @@ function MenteeDetailsPage() {
     }
   }
   
-  // --- THIS IS THE FIX ---
   const handleAddNewClick = () => {
     setEditingAssessment(null); 
     setShowAssessmentForm(true); 
   }
-  // ---------------------
 
   const handleEditClick = (assessment) => {
     setEditingAssessment(assessment); 
@@ -193,9 +191,11 @@ function MenteeDetailsPage() {
 
     } catch (err) {
       console.error(err);
-      // This will show the REAL error message from the backend
+      // --- THIS IS THE FIX ---
+      // This will show the REAL error message from the backend (like "404 - Not Found")
       const errorMsg = err.response?.data?.message || 'Failed to download report.';
       alert(`Error: ${errorMsg}`);
+      // -----------------------
     } finally {
       setIsDownloading(false);
     }
