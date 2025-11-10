@@ -1,278 +1,318 @@
-const express = require('express');
-const router = express.Router();
+import React, { useState, useEffect, useCallback } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import api from 'api';
+import AssessmentForm from '../components/AssessmentForm'
+import InterventionForm from '../components/InterventionForm'
+import HodMentorSwitch from '../components/HodMentorSwitch'
 
-// Import our models
-const Assessment = require('../models/assessment.model.js');
-const Student = require('../models/student.model.js'); // --- THIS IS NEEDED ---
+// --- 1. NEW IMPORTS FOR PDF ---
+import { jsPDF } from "jspdf";
+import autoTable from 'jspdf-autotable';
+// -----------------------------
 
-// Import our "security guard" middleware
-const { protect } = require('../middleware/auth.middleware.js');
+function MenteeDetailsPage() {
+  const [student, setStudent] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const { studentId } = useParams()
+  const { user } = useAuth()
+  
+  const [editingAssessment, setEditingAssessment] = useState(null);
+  const [showAssessmentForm, setShowAssessmentForm] = useState(false);
+  
+  // --- 2. NEW STATE FOR PDF BUTTON ---
+  const [isDownloading, setIsDownloading] = useState(false);
 
-// Import our "smart" scoring brain
-const { calculateTotalScore } = require('../utils/scoring.js');
-
-// -----------------------------------------------------------------------
-// ROUTE 1: Create or Update an Assessment (Sheet 1)
-// URL: POST /api/assessments/
-// -----------------------------------------------------------------------
-router.post('/', protect, async (req, res) => {
-  try {
-    const mentorId = req.user._id; // Get the logged-in mentor's ID
-    const { 
-      studentId, 
-      academicYear,
-      ...rawData // This collects all other fields (cgpa, attendance, etc.)
-    } = req.body;
-
-    // --- Security Check ---
-    const student = await Student.findById(studentId);
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found.' });
+  const fetchStudentDetails = useCallback(async () => {
+    setLoading(true)
+    try {
+      const response = await api.get(`/students/${studentId}/details`)
+      setStudent(response.data)
+      setLoading(false)
+    } catch (err) {
+      setError('Failed to fetch student details.')
+      setLoading(false)
     }
-    if (!student.currentMentor.equals(mentorId)) {
-      return res.status(403).json({ message: 'You are not authorized to edit this student.' });
-    }
+  }, [studentId]);
 
-    // --- "Upsert" Logic ---
-    const updatedAssessment = await Assessment.findOneAndUpdate(
-      { studentId: studentId, academicYear: academicYear }, // Find by this
-      { ...rawData, studentId, academicYear }, // Set this data
-      { new: true, upsert: true, runValidators: true } // Options
-    );
+  useEffect(() => {
+    fetchStudentDetails()
+  }, [fetchStudentDetails])
 
-    // --- Scoring Logic ---
-    const scores = calculateTotalScore(updatedAssessment);
-
-    res.status(200).json({
-      savedData: updatedAssessment,
-      calculatedScores: scores
-    });
-
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-// -----------------------------------------------------------------------
-// ROUTE 2: Get a student's assessment data
-// URL: GET /api/assessments/:studentId
-// -----------------------------------------------------------------------
-router.get('/:studentId', protect, async (req, res) => {
-  try {
-    const { studentId } = req.params;
-
-    const assessments = await Assessment.find({ studentId: studentId });
-
-    if (!assessments) {
-      return res.status(404).json({ message: 'No assessments found for this student.' });
-    }
-
-    const assessmentsWithScores = assessments.map(doc => {
-      const scores = calculateTotalScore(doc);
-      return { savedData: doc, calculatedScores: scores };
-    });
-    
-    res.status(200).json(assessmentsWithScores);
-
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-// -----------------------------------------------------------------------
-// ROUTE 3: Get Performance Report for a Mentor's Mentees
-// URL: GET /api/assessments/mentor/performance
-// -----------------------------------------------------------------------
-router.get('/mentor/performance', protect, async (req, res) => {
-  try {
-    const mentorId = req.user._id; // Get logged-in mentor
-
-    const mentees = await Student.find({ currentMentor: mentorId })
-                          .select('_id name registerNumber');
-
-    const performanceData = [];
-
-    await Promise.all(mentees.map(async (mentee) => {
-      const latestAssessment = await Assessment.findOne({ studentId: mentee._id })
-                                        .sort({ updatedAt: -1 }); // Get the newest one
-
-      if (latestAssessment) {
-        const scores = calculateTotalScore(latestAssessment);
-        
-        performanceData.push({
-          studentId: mentee._id,
-          name: mentee.name,
-          registerNumber: mentee.registerNumber,
-          totalScore: scores.totalScore,
-          academicYear: latestAssessment.academicYear
-        });
-      } else {
-        performanceData.push({
-          studentId: mentee._id,
-          name: mentee.name,
-          registerNumber: mentee.registerNumber,
-          totalScore: 0,
-          academicYear: 'N/A'
-        });
+  // --- (All handle functions are unchanged) ---
+  const handleDeleteAssessment = async (assessmentId) => {
+    if (window.confirm('Are you sure you want to delete this assessment record?')) {
+      try {
+        await api.delete(`/assessments/${assessmentId}`);
+        fetchStudentDetails(); 
+      } catch (err) {
+        alert('Failed to delete assessment.');
       }
-    }));
-
-    performanceData.sort((a, b) => b.totalScore - a.totalScore);
-
-    res.status(200).json(performanceData);
-
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    }
   }
-});
-
-// -----------------------------------------------------------------------
-// ROUTE 4: Delete an Assessment
-// URL: DELETE /api/assessments/:assessmentId
-// -----------------------------------------------------------------------
-router.delete('/:assessmentId', protect, async (req, res) => {
-  try {
-    const mentorId = req.user._id;
-    const { assessmentId } = req.params;
-
-    // 1. Find the assessment
-    const assessment = await Assessment.findById(assessmentId);
-    if (!assessment) {
-      return res.status(404).json({ message: 'Assessment not found.' });
-    }
-
-    // 2. Find the student associated with the assessment
-    const student = await Student.findById(assessment.studentId);
-    if (!student) {
-      return res.status(404).json({ message: 'Associated student not found.' });
-    }
-
-    // 3. Security Check: Ensure the logged-in user is this student's mentor
-    if (!student.currentMentor.equals(mentorId)) {
-      return res.status(403).json({ message: 'You are not authorized to delete this assessment.' });
-    }
-
-    // 4. Delete the assessment
-    await Assessment.findByIdAndDelete(assessmentId);
-
-    res.status(200).json({ message: 'Assessment deleted successfully.' });
-
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  
+  const handleAddNewClick = () => {
+    setEditingAssessment(null); 
+    setShowAssessmentForm(true); 
   }
-});
 
-// -----------------------------------------------------------------------
-// ROUTE 5: Get Overall PDF Report Data for a Student (NEW)
-// URL: GET /api/assessments/report/:studentId
-// -----------------------------------------------------------------------
-router.get('/report/:studentId', protect, async (req, res) => {
-  try {
-    const { studentId } = req.params;
+  const handleEditClick = (assessment) => {
+    setEditingAssessment(assessment); 
+    setShowAssessmentForm(true); 
+  }
 
-    // 1. Get Student & Mentor Info
-    const student = await Student.findById(studentId).populate('currentMentor', 'name');
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found.' });
-    }
+  const handleFormSave = () => {
+    setShowAssessmentForm(false); 
+    fetchStudentDetails(); 
+  }
 
-    // 2. Security Check (HOD or correct mentor)
-    const user = req.user;
-    if (user.role !== 'hod' && !student.currentMentor._id.equals(user._id)) {
-      return res.status(403).json({ message: 'You are not authorized to view this report.' });
-    }
+  const handleFormCancel = () => {
+    setShowAssessmentForm(false); 
+  }
 
-    // 3. Get all assessments for this student
-    const assessments = await Assessment.find({ studentId: studentId });
-    if (assessments.length === 0) {
-      return res.status(404).json({ message: 'No assessments found to generate a report.' });
-    }
+  // --- (Loading/Error/Guard Clause are unchanged) ---
+  if (loading) {
+    return (
+      <div className="mdp-wrap loading">
+        <div className="spin" />
+      </div>
+    )
+  }
 
-    // 4. Aggregate all data across all semesters
-    const totals = {
-      workshop: { participated: 0 },
-      seminar: { participated: 0 },
-      conference: { participated: 0, presented: 0, prizesWon: 0 },
-      symposium: { participated: 0, presented: 0, prizesWon: 0 },
-      profBodyActivities: { participated: 0, presented: 0, prizesWon: 0 },
-      talksLectures: { participated: 0 },
-      projectExpo: { presented: 0, prizesWon: 0 },
-      nptelSwayam: { completed: 0, miniprojects: 0 },
-      otherCertifications: { completed: 0, miniprojects: 0 },
-      culturals: { participated: 0, prizesWon: 0 },
-      sports: { participated: 0, prizesWon: 0 },
-      ncc: { participated: 0, prizesWon: 0 },
-      nss: { participated: 0, prizesWon: 0 },
-      attendanceSum: 0,
-      latestCgpa: 0,
-      latestCgpaDate: new Date(0), // Start with a very old date
-    };
+  if (error) {
+    return (
+      <div className="mdp-wrap error">
+        <div className="err">{error}</div>
+      </div>
+    )
+  }
 
-    for (const ass of assessments) {
-      totals.workshop.participated += ass.workshop?.participated || 0;
-      totals.seminar.participated += ass.seminar?.participated || 0;
-      totals.conference.participated += ass.conference?.participated || 0;
-      totals.conference.presented += ass.conference?.presented || 0;
-      totals.conference.prizesWon += ass.conference?.prizesWon || 0;
-      totals.symposium.participated += ass.symposium?.participated || 0;
-      totals.symposium.presented += ass.symposium?.presented || 0;
-      totals.symposium.prizesWon += ass.symposium?.prizesWon || 0;
-      totals.profBodyActivities.participated += ass.profBodyActivities?.participated || 0;
-      totals.profBodyActivities.presented += ass.profBodyActivities?.presented || 0;
-      totals.profBodyActivities.prizesWon += ass.profBodyActivities?.prizesWon || 0;
-      totals.talksLectures.participated += ass.talksLectures?.participated || 0;
-      totals.projectExpo.presented += ass.projectExpo?.presented || 0;
-      totals.projectExpo.prizesWon += ass.projectExpo?.prizesWon || 0;
-      totals.nptelSwayam.completed += ass.nptelSwayam?.completed || 0;
-      totals.nptelSwayam.miniprojects += ass.nptelSwayam?.miniprojects || 0;
-      totals.otherCertifications.completed += ass.otherCertifications?.completed || 0;
-      totals.otherCertifications.miniprojects += ass.otherCertifications?.miniprojects || 0;
-      totals.culturals.participated += ass.culturals?.participated || 0;
-      totals.culturals.prizesWon += ass.culturals?.prizesWon || 0;
-      totals.sports.participated += ass.sports?.participated || 0;
-      totals.sports.prizesWon += ass.sports?.prizesWon || 0;
-      totals.ncc.participated += ass.ncc?.participated || 0;
-      totals.ncc.prizesWon += ass.ncc?.prizesWon || 0;
-      totals.nss.participated += ass.nss?.participated || 0;
-      totals.nss.prizesWon += ass.nss?.prizesWon || 0;
+  if (!student || !student.profile) {
+    return (
+      <div className="mdp-wrap empty">
+        <div className="box">No student data found.</div>
+      </div>
+    )
+  }
 
-      totals.attendanceSum += ass.attendancePercent || 0;
+  
+  // --- 3. 🚀 NEW: PDF DOWNLOAD FUNCTION 🚀 ---
+  const handleDownloadReport = async () => {
+    setIsDownloading(true);
+    try {
+      // 1. Call our new backend route
+      const response = await api.get(`/assessments/report/${studentId}`);
+      const { studentProfile, mentorName, kpiTotals, finalScores } = response.data;
+
+      // 2. Create the PDF document
+      const doc = new jsPDF();
+
+      // 3. Add Header
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Vel Tech Multi Tech Dr.Rangarajan Dr.Sakunthala Engineering College', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('(Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai)', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('STUDENT MENTORING ASSESSMENT SHEET', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+
+      // 4. Add Student Info
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Department: ${studentProfile.department}`, 14, 40);
+      doc.text(`Mentor Name: ${mentorName}`, 14, 45);
+      doc.text(`Mentee Name: ${studentProfile.name}`, 14, 50);
+      doc.text(`Mentee VM No: ${studentProfile.vmNumber}`, 14, 55);
+      doc.text(`Batch: ${studentProfile.batch}`, 100, 55);
+
+      // 5. Build the table data
+      const tableBody = [
+        ['1', 'CGPA', studentProfile.latestCgpa, '', '', finalScores.cgpaScore],
+        ['2', '% Attendance', `${finalScores.attendanceScore.toFixed(2)}%`, '', '', finalScores.attendanceScore],
+        ['3', 'Workshop', kpiTotals.workshop.participated, '', '', ''],
+        ['4', 'Seminar', kpiTotals.seminar.participated, '', '', ''],
+        ['5', 'Conference', `${kpiTotals.conference.participated} (P) / ${kpiTotals.conference.presented} (Pr) / ${kpiTotals.conference.prizesWon} (W)`, '', '', ''],
+        ['6', 'Symposium', `${kpiTotals.symposium.participated} (P) / ${kpiTotals.symposium.presented} (Pr) / ${kpiTotals.symposium.prizesWon} (W)`, '', '', ''],
+        ['7', 'Professional Body activities', `${kpiTotals.profBodyActivities.participated} (P) / ${kpiTotals.profBodyActivities.presented} (Pr) / ${kpiTotals.profBodyActivities.prizesWon} (W)`, '', '', ''],
+        ['', '', '', '', 'Score', finalScores.coCurricularScore], // Co-curricular Sub-total
+        ['8', 'Talks/Lectures', kpiTotals.talksLectures.participated, '', '', ''],
+        ['9', 'Project Expo', `${kpiTotals.projectExpo.presented} (Pr) / ${kpiTotals.projectExpo.prizesWon} (W)`, '', '', ''],
+        ['10', 'NPTEL/SWAYAM', `${kpiTotals.nptelSwayam.completed} (C) / ${kpiTotals.nptelSwayam.miniprojects} (MP)`, '', '', ''],
+        ['11', 'Certification Courses', `${kpiTotals.otherCertifications.completed} (C) / ${kpiTotals.otherCertifications.miniprojects} (MP)`, '', '', ''],
+        ['', '', '', '', 'Score', finalScores.certificationScore], // Certification Sub-total
+        ['12', 'Culturals', `${kpiTotals.culturals.participated} (P) / ${kpiTotals.culturals.prizesWon} (W)`, '', '', ''],
+        ['13', 'Sports', `${kpiTotals.sports.participated} (P) / ${kpiTotals.sports.prizesWon} (W)`, '', '', ''],
+        ['14', 'NCC', `${kpiTotals.ncc.participated} (P) / ${kpiTotals.ncc.prizesWon} (W)`, '', '', ''],
+        ['15', 'NSS', `${kpiTotals.nss.participated} (P) / ${kpiTotals.nss.prizesWon} (W)`, '', '', ''],
+        ['', '', '', '', 'Score', finalScores.extraCurricularScore], // Extra-curricular Sub-total
+      ];
+
+      // 6. Add the table
+      autoTable(doc, {
+        startY: 60,
+        head: [['Sl. No', 'KPI', 'Earned / No. of events attended over the years', 'Remarks', 'Average Score', 'Score']],
+        body: tableBody,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 1.5, halign: 'center' },
+        headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: 'bold' },
+        columnStyles: {
+          1: { halign: 'left' },
+          2: { halign: 'left' },
+        },
+        // This is to merge cells for the sub-scores
+        didParseCell: function (data) {
+          if (data.cell.raw === 'Score') {
+            data.cell.colSpan = 2;
+            data.cell.halign = 'right';
+            data.cell.fontStyle = 'bold';
+          }
+        }
+      });
+
+      // 7. Add Final Score
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
       
-      // Find the latest CGPA
-      if (ass.updatedAt > totals.latestCgpaDate) {
-        totals.latestCgpa = ass.cgpa || 0;
-        totals.latestCgpaDate = ass.updatedAt;
-      }
+      // --- THIS IS THE FIX ---
+      const finalY = doc.autoTable.previous.finalY; // Removed (doc as any)
+      // -----------------------
+      
+      doc.text('Overall Score (out of 50)', 140, finalY + 10);
+      doc.text(finalScores.totalScore.toString(), 190, finalY + 10, { align: 'center' });
+
+      // 8. Add Signatures
+      doc.setFont('helvetica', 'normal');
+      doc.text('Mentor', 30, finalY + 30);
+      doc.text('Head of the Department', 160, finalY + 30);
+
+      // 9. Save the file
+      doc.save(`Mentoring_Report_${studentProfile.name}.pdf`);
+
+    } catch (err) {
+      console.error(err);
+      alert('Failed to download report. Make sure you have added at least one assessment.');
+    } finally {
+      setIsDownloading(false);
     }
-
-    // 5. Create the final data object to be scored
-    const overallData = {
-      ...totals,
-      cgpa: totals.latestCgpa,
-      // Calculate average attendance
-      attendancePercent: totals.attendanceSum / assessments.length, 
-    };
-
-    // 6. Calculate the final scores using your "brain"
-    const finalScores = calculateTotalScore(overallData);
-
-    // 7. Send the complete report data to the frontend
-    res.status(200).json({
-      studentProfile: {
-        name: student.name,
-        vmNumber: student.vmNumber,
-        department: student.department,
-        batch: student.batch,
-      },
-      mentorName: student.currentMentor.name,
-      kpiTotals: totals, // The total counts (e.g., 5 workshops)
-      finalScores: finalScores, // The calculated scores (e.g., 10 points)
-    });
-
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
+  };
+  // --- END OF PDF FUNCTION ---
 
 
-module.exports = router;
+  return (
+    <div className="mdp">
+      <div className="container">
+        <Link to="/dashboard" className="back">← Back to Dashboard</Link>
+
+        {user && user.role === 'hod' && (
+          <div className="section" style={{marginTop: '18px', background: 'rgba(239, 68, 68, .08)', border: '1px solid rgba(239, 68, 68, .4)'}}>
+            <HodMentorSwitch 
+              studentId={student.profile._id}
+              currentMentorId={student.profile.currentMentor}
+              onMentorSwitched={fetchStudentDetails}
+            />
+          </div>
+        )}
+
+        <div className="grid">
+          <div className="card">
+            <div className="card-head" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 className="card-title">Profile</h3>
+              <button 
+                onClick={handleDownloadReport} 
+                className="form-btn" 
+                style={{ margin: 0, fontSize: 12, padding: '6px 10px', background: '#0ea5e9' }}
+                disabled={isDownloading}
+              >
+                {isDownloading ? 'Downloading...' : 'Download Report'}
+              </button>
+            </div>
+            <div className="card-body">
+              <h2 className="profile-name">{student.profile.name}</h2>
+              <p className="meta">Register No: {student.profile.registerNumber}</p>
+              <p className="meta">VM No: {student.profile.vmNumber}</p>
+              <p className="meta">Department: {student.profile.department}</p>
+            </div>
+          </div>
+
+          <div className="section">
+            <div className="card-head" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 className="card-title">Assessment Data<span className="chip">Sheet 1</span></h3>
+              {!showAssessmentForm && (
+                <button onClick={handleAddNewClick} className="form-btn" style={{ margin: 0, fontSize: 12, padding: '6px 10px', background: '#10b981' }}>
+                  Add New
+                </button>
+              )}
+            </div>
+            <div className="card-body">
+              {showAssessmentForm ? (
+                <div style={{ marginBottom: 16 }}>
+                  <AssessmentForm 
+                    studentId={studentId} 
+                    assessmentToEdit={editingAssessment}
+                    onAssessmentAdded={handleFormSave}
+                    onCancel={handleFormCancel}
+                  />
+                </div>
+              ) : (
+                student.assessments.length === 0 && <div className="muted">No assessment data found.</div>
+              )}
+              
+              {!showAssessmentForm && student.assessments.length > 0 && (
+                <div className="two-col">
+                  {student.assessments.map(ass => (
+                    <div key={ass._id} className="item">
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                        <strong>{ass.academicYear}</strong>
+                        <span className="chip">CGPA {ass.cgpa}</span>
+                      </div>
+                      <div className="muted">Attendance: {ass.attendancePercent}%</div>
+                      
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                        <button onClick={() => handleEditClick(ass)} className="form-btn" style={{ margin: 0, fontSize: 12, padding: '4px 8px', background: '#f59e0b' }}>
+                          Edit
+                        </button>
+                        <button onClick={() => handleDeleteAssessment(ass._id)} className="form-btn" style={{ margin: 0, fontSize: 12, padding: '4px 8px', background: '#dc2626' }}>
+                          Delete
+                        </button>
+                      </div>
+                      
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="section" style={{ gridColumn: '1 / -1' }}>
+            <div className="card-head">
+              <h3 className="card-title">Intervention Log<span className="chip">Sheet 2</span></h3>
+            </div>
+            <div className="card-body">
+              <div style={{ marginBottom: 16 }}>
+                <InterventionForm studentId={studentId} onInterventionAdded={fetchStudentDetails} />
+              </div>
+              {student.interventions.length > 0 ? (
+                <div className="two-col">
+                  {student.interventions.map(int => (
+                    <div key={int._id} className="item">
+                      <strong>{int.monthYear} ({int.category})</strong>
+                      <p className="muted" style={{ marginTop:6 }}><span style={{ fontWeight:700, color:'#fff' }}>Action:</span> {int.actionTaken}</p>
+                      <p className="muted"><span style={{ fontWeight:700, color:'#fff' }}>Impact:</span> {int.impact}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="muted">No intervention data found.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default MenteeDetailsPage
