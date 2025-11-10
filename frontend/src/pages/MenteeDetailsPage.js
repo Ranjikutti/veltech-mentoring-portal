@@ -1,3 +1,4 @@
+// --- Final Build ---
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -88,6 +89,7 @@ function MenteeDetailsPage() {
     )
   }
 
+  // --- THIS IS THE CRASH FIX ---
   if (!student || !student.profile) {
     return (
       <div className="mdp-wrap empty">
@@ -162,7 +164,6 @@ function MenteeDetailsPage() {
           1: { halign: 'left' },
           2: { halign: 'left' },
         },
-        // This is to merge cells for the sub-scores
         didParseCell: function (data) {
           if (data.cell.raw === 'Score') {
             data.cell.colSpan = 2;
@@ -176,9 +177,9 @@ function MenteeDetailsPage() {
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       
-      // --- THIS IS THE FIX ---
+      // --- THIS IS THE TYPO FIX ---
       const finalY = doc.autoTable.previous.finalY; // Removed (doc as any)
-      // -----------------------
+      // ----------------------------
       
       doc.text('Overall Score (out of 50)', 140, finalY + 10);
       doc.text(finalScores.totalScore.toString(), 190, finalY + 10, { align: 'center' });
