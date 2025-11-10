@@ -54,7 +54,7 @@ function MenteeDetailsPage() {
   }
   
   const handleAddNewClick = () => {
-    setEditingAssessment(null); 
+    setEditingAssessment(null); _
     setShowAssessmentForm(true); 
   }
 
@@ -191,9 +191,11 @@ function MenteeDetailsPage() {
 
     } catch (err) {
       console.error(err);
+      // --- THIS IS THE FIX ---
       // This will show the REAL error message from the backend (like "404 - Not Found")
       const errorMsg = err.response?.data?.message || 'Failed to download report.';
       alert(`Error: ${errorMsg}`);
+      // -----------------------
     } finally {
       setIsDownloading(false);
     }
@@ -218,10 +220,8 @@ function MenteeDetailsPage() {
 
         <div className="grid">
           <div className="card">
-            {/* --- 4. CARD HEAD UPDATED --- */}
             <div className="card-head" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 className="card-title">Profile</h3>
-              {/* --- NEW DOWNLOAD BUTTON --- */}
               <button 
                 onClick={handleDownloadReport} 
                 className="form-btn" 
@@ -239,7 +239,6 @@ function MenteeDetailsPage() {
             </div>
           </div>
 
-          {/* --- (Assessment Section unchanged) --- */}
           <div className="section">
             <div className="card-head" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 className="card-title">Assessment Data<span className="chip">Sheet 1</span></h3>
@@ -289,7 +288,6 @@ function MenteeDetailsPage() {
             </div>
           </div>
 
-          {/* --- (Intervention Section unchanged) --- */}
           <div className="section" style={{ gridColumn: '1 / -1' }}>
             <div className="card-head">
               <h3 className="card-title">Intervention Log<span className="chip">Sheet 2</span></h3>
