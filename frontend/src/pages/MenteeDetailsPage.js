@@ -176,7 +176,11 @@ function MenteeDetailsPage() {
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       
-      const finalY = doc.autoTable.previous.finalY; // Removed (doc as any)
+      // --- THIS IS THE FIX ---
+      // The old code was 'doc.autoTable.previous.finalY'
+      // The new code for jspdf-autotable v3+ is:
+      const finalY = doc.lastAutoTable.finalY;
+      // -----------------------
       
       doc.text('Overall Score (out of 50)', 140, finalY + 10);
       doc.text(finalScores.totalScore.toString(), 190, finalY + 10, { align: 'center' });
@@ -191,11 +195,9 @@ function MenteeDetailsPage() {
 
     } catch (err) {
       console.error(err);
-      // --- THIS IS THE FIX ---
-      // This will show the REAL error message from the backend (like "404 - Not Found")
+      // This will show the REAL error message from the backend
       const errorMsg = err.response?.data?.message || 'Failed to download report.';
       alert(`Error: ${errorMsg}`);
-      // -----------------------
     } finally {
       setIsDownloading(false);
     }
