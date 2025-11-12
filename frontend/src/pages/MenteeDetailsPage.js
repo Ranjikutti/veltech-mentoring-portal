@@ -19,14 +19,23 @@ function MenteeDetailsPage() {
   const { studentId } = useParams()
   const { user } = useAuth()
   
+  // --- State for Assessment Form ---
   const [editingAssessment, setEditingAssessment] = useState(null);
   const [showAssessmentForm, setShowAssessmentForm] = useState(false);
   
-  // --- 2. NEW STATE FOR PDF BUTTON ---
+  // --- NEW: State for Intervention Form ---
+  const [editingIntervention, setEditingIntervention] = useState(null);
+  const [showInterventionForm, setShowInterventionForm] = useState(false);
+  
+  // --- (PDF Download state is unchanged) ---
   const [isDownloading, setIsDownloading] = useState(false);
 
   const fetchStudentDetails = useCallback(async () => {
-    setLoading(true)
+    // We set loading to true *only if* the page isn't already loaded
+    // This makes the UI feel faster after an edit/delete
+    if (!student) {
+      setLoading(true);
+    }
     try {
       const response = await api.get(`/students/${studentId}/details`)
       setStudent(response.data)
@@ -35,13 +44,16 @@ function MenteeDetailsPage() {
       setError('Failed to fetch student details.')
       setLoading(false)
     }
-  }, [studentId]);
+  }, [studentId, student]); // Added 'student' as dependency
 
   useEffect(() => {
-    fetchStudentDetails()
-  }, [fetchStudentDetails])
+    // Only fetch details on first load
+    if (!student) {
+      fetchStudentDetails()
+    }
+  }, [fetchStudentDetails, student]) // Added 'student'
 
-  // --- (All handle functions are unchanged) ---
+  // --- Assessment Handlers (unchanged) ---
   const handleDeleteAssessment = async (assessmentId) => {
     if (window.confirm('Are you sure you want to delete this assessment record?')) {
       try {
@@ -52,64 +64,64 @@ function MenteeDetailsPage() {
       }
     }
   }
-  
   const handleAddNewClick = () => {
     setEditingAssessment(null); 
     setShowAssessmentForm(true); 
   }
-
   const handleEditClick = (assessment) => {
     setEditingAssessment(assessment); 
     setShowAssessmentForm(true); 
   }
-
   const handleFormSave = () => {
     setShowAssessmentForm(false); 
     fetchStudentDetails(); 
   }
-
   const handleFormCancel = () => {
     setShowAssessmentForm(false); 
   }
-
-  // --- (Loading/Error/Guard Clause are unchanged) ---
-  if (loading) {
-    return (
-      <div className="mdp-wrap loading">
-        <div className="spin" />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="mdp-wrap error">
-        <div className="err">{error}</div>
-      </div>
-    )
-  }
-
-  if (!student || !student.profile) {
-    return (
-      <div className="mdp-wrap empty">
-        <div className="box">No student data found.</div>
-      </div>
-    )
-  }
-
   
-  // --- 3. 🚀 NEW: PDF DOWNLOAD FUNCTION 🚀 ---
+  // --- 🚀 NEW: Intervention Handlers 🚀 ---
+  const handleDeleteIntervention = async (interventionId) => {
+    if (window.confirm('Are you sure you want to delete this intervention log?')) {
+      try {
+        await api.delete(`/interventions/${interventionId}`);
+        fetchStudentDetails(); // Refresh data
+      } catch (err) {
+        alert('Failed to delete intervention.');
+      }
+    }
+  }
+  
+  const handleAddNewInterventionClick = () => {
+    setEditingIntervention(null); 
+    setShowInterventionForm(true); 
+  }
+
+  const handleEditInterventionClick = (intervention) => {
+    setEditingIntervention(intervention); 
+    setShowInterventionForm(true); 
+  }
+
+  const handleInterventionFormSave = () => {
+    setShowInterventionForm(false); 
+    fetchStudentDetails(); 
+  }
+
+  const handleInterventionFormCancel = () => {
+    setShowInterventionForm(false); 
+  }
+  // --- END OF NEW HANDLERS ---
+  
+  
+  // --- (PDF Download function is unchanged) ---
   const handleDownloadReport = async () => {
     setIsDownloading(true);
     try {
-      // 1. Call our new backend route
       const response = await api.get(`/assessments/report/${studentId}`);
       const { studentProfile, mentorName, kpiTotals, finalScores } = response.data;
-
-      // 2. Create the PDF document
       const doc = new jsPDF();
-
-      // 3. Add Header
+      
+      // Header
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.text('Vel Tech Multi Tech Dr.Rangarajan Dr.Sakunthala Engineering College', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
@@ -120,7 +132,7 @@ function MenteeDetailsPage() {
       doc.setFont('helvetica', 'bold');
       doc.text('STUDENT MENTORING ASSESSMENT SHEET', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
 
-      // 4. Add Student Info
+      // Student Info
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.text(`Department: ${studentProfile.department}`, 14, 40);
@@ -129,7 +141,7 @@ function MenteeDetailsPage() {
       doc.text(`Mentee VM No: ${studentProfile.vmNumber}`, 14, 55);
       doc.text(`Batch: ${studentProfile.batch}`, 100, 55);
 
-      // 5. Build the table data
+      // Table Body
       const tableBody = [
         ['1', 'CGPA', studentProfile.latestCgpa, '', '', finalScores.cgpaScore],
         ['2', '% Attendance', `${finalScores.attendanceScore.toFixed(2)}%`, '', '', finalScores.attendanceScore],
@@ -151,7 +163,7 @@ function MenteeDetailsPage() {
         ['', '', '', '', 'Score', finalScores.extraCurricularScore], // Extra-curricular Sub-total
       ];
 
-      // 6. Add the table
+      // Add Table
       autoTable(doc, {
         startY: 60,
         head: [['Sl. No', 'KPI', 'Earned / No. of events attended over the years', 'Remarks', 'Average Score', 'Score']],
@@ -172,37 +184,53 @@ function MenteeDetailsPage() {
         }
       });
 
-      // 7. Add Final Score
+      // Add Final Score
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      
-      // --- THIS IS THE FIX ---
-      // The old code was 'doc.autoTable.previous.finalY'
-      // The new code for jspdf-autotable v3+ is:
       const finalY = doc.lastAutoTable.finalY;
-      // -----------------------
-      
       doc.text('Overall Score (out of 50)', 140, finalY + 10);
       doc.text(finalScores.totalScore.toString(), 190, finalY + 10, { align: 'center' });
 
-      // 8. Add Signatures
+      // Add Signatures
       doc.setFont('helvetica', 'normal');
       doc.text('Mentor', 30, finalY + 30);
       doc.text('Head of the Department', 160, finalY + 30);
 
-      // 9. Save the file
+      // Save file
       doc.save(`Mentoring_Report_${studentProfile.name}.pdf`);
 
     } catch (err) {
       console.error(err);
-      // This will show the REAL error message from the backend
       const errorMsg = err.response?.data?.message || 'Failed to download report.';
       alert(`Error: ${errorMsg}`);
     } finally {
       setIsDownloading(false);
     }
   };
-  // --- END OF PDF FUNCTION ---
+
+
+  // --- (Loading/Error/Guard Clause are unchanged) ---
+  if (loading && !student) { 
+    return (
+      <div className="mdp-wrap loading">
+        <div className="spin" />
+      </div>
+    )
+  }
+  if (error) {
+    return (
+      <div className="mdp-wrap error">
+        <div className="err">{error}</div>
+      </div>
+    )
+  }
+  if (!student || !student.profile) {
+    return (
+      <div className="mdp-wrap empty">
+        <div className="box">No student data found.</div>
+      </div>
+    )
+  }
 
 
   return (
@@ -221,6 +249,7 @@ function MenteeDetailsPage() {
         )}
 
         <div className="grid">
+          {/* --- (Profile Card with Download Button - unchanged) --- */}
           <div className="card">
             <div className="card-head" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 className="card-title">Profile</h3>
@@ -241,6 +270,7 @@ function MenteeDetailsPage() {
             </div>
           </div>
 
+          {/* --- (Assessment Section - unchanged) --- */}
           <div className="section">
             <div className="card-head" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 className="card-title">Assessment Data<span className="chip">Sheet 1</span></h3>
@@ -273,7 +303,6 @@ function MenteeDetailsPage() {
                         <span className="chip">CGPA {ass.cgpa}</span>
                       </div>
                       <div className="muted">Attendance: {ass.attendancePercent}%</div>
-                      
                       <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                         <button onClick={() => handleEditClick(ass)} className="form-btn" style={{ margin: 0, fontSize: 12, padding: '4px 8px', background: '#f59e0b' }}>
                           Edit
@@ -282,7 +311,6 @@ function MenteeDetailsPage() {
                           Delete
                         </button>
                       </div>
-                      
                     </div>
                   ))}
                 </div>
@@ -290,29 +318,61 @@ function MenteeDetailsPage() {
             </div>
           </div>
 
+          
+          {/* --- INTERVENTION SECTION (HEAVILY UPDATED) --- */}
           <div className="section" style={{ gridColumn: '1 / -1' }}>
-            <div className="card-head">
+            <div className="card-head" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 className="card-title">Intervention Log<span className="chip">Sheet 2</span></h3>
+              {/* NEW: Add New Intervention Button */}
+              {!showInterventionForm && (
+                <button onClick={handleAddNewInterventionClick} className="form-btn" style={{ margin: 0, fontSize: 12, padding: '6px 10px', background: '#10b981' }}>
+                  Add New
+                </button>
+              )}
             </div>
             <div className="card-body">
-              <div style={{ marginBottom: 16 }}>
-                <InterventionForm studentId={studentId} onInterventionAdded={fetchStudentDetails} />
-              </div>
-              {student.interventions.length > 0 ? (
+              {/* NEW: Conditional Intervention Form */}
+              {showInterventionForm ? (
+                <div style={{ marginBottom: 16 }}>
+                  <InterventionForm 
+                    studentId={studentId}
+                    interventionToEdit={editingIntervention}
+                    onInterventionAdded={handleInterventionFormSave}
+                    onCancel={handleInterventionFormCancel}
+                  />
+                </div>
+              ) : (
+                student.interventions.length === 0 && <div className="muted">No intervention data found.</div>
+              )}
+              
+              {/* NEW: Show list only if form is hidden */}
+              {!showInterventionForm && student.interventions.length > 0 && (
                 <div className="two-col">
                   {student.interventions.map(int => (
                     <div key={int._id} className="item">
                       <strong>{int.monthYear} ({int.category})</strong>
                       <p className="muted" style={{ marginTop:6 }}><span style={{ fontWeight:700, color:'#fff' }}>Action:</span> {int.actionTaken}</p>
                       <p className="muted"><span style={{ fontWeight:700, color:'#fff' }}>Impact:</span> {int.impact}</p>
+                      
+                      {/* --- NEW: EDIT AND DELETE BUTTONS --- */}
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                        <button onClick={() => handleEditInterventionClick(int)} className="form-btn" style={{ margin: 0, fontSize: 12, padding: '4px 8px', background: '#f59e0b' }}>
+                          Edit
+                        </button>
+                        <button onClick={() => handleDeleteIntervention(int._id)} className="form-btn" style={{ margin: 0, fontSize: 12, padding: '4px 8px', background: '#dc2626' }}>
+                          Delete
+                        </button>
+                      </div>
+                      {/* --- END OF NEW BUTTONS --- */}
+                      
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="muted">No intervention data found.</div>
               )}
             </div>
           </div>
+          {/* --- END OF INTERVENTION SECTION --- */}
+          
         </div>
       </div>
     </div>
