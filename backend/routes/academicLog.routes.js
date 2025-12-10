@@ -8,7 +8,16 @@ const { protect } = require('../middleware/auth.middleware.js');
 router.post('/', protect, async (req, res) => {
   try {
     const user = req.user;
-    const { studentId, semester, date, type, problemIdentification, problemDetails, remedialAction, improvementProgress } = req.body;
+    const {
+      studentId,
+      semester,
+      date,
+      type,
+      problemIdentification,
+      problemDetails,
+      remedialAction,
+      improvementProgress
+    } = req.body;
 
     const student = await Student.findById(studentId);
     if (!student) {
@@ -26,13 +35,13 @@ router.post('/', protect, async (req, res) => {
     const log = new AcademicLog({
       studentId,
       mentorId: user._id,
-      semester,
-      date,
+      semester: semester ? String(semester).trim() : '',
+      date: date ? new Date(date) : new Date(),
       type,
-      problemIdentification,
-      problemDetails,
-      remedialAction,
-      improvementProgress
+      problemIdentification: problemIdentification ? String(problemIdentification).trim() : '',
+      problemDetails: problemDetails ? String(problemDetails).trim() : '',
+      remedialAction: remedialAction ? String(remedialAction).trim() : '',
+      improvementProgress: improvementProgress ? String(improvementProgress).trim() : ''
     });
 
     const saved = await log.save();
@@ -45,16 +54,19 @@ router.post('/', protect, async (req, res) => {
 router.get('/:studentId', protect, async (req, res) => {
   try {
     const { studentId } = req.params;
-    const { semester } = req.query;
+    const { semester, type } = req.query;
 
     const filter = { studentId };
     if (semester) {
       filter.semester = semester;
     }
+    if (type) {
+      filter.type = type;
+    }
 
     const logs = await AcademicLog.find(filter)
       .populate('mentorId', 'name')
-      .sort({ date: 1, createdAt: 1 });
+      .sort({ semester: 1, slNo: 1, date: 1, createdAt: 1 });
 
     return res.status(200).json(logs);
   } catch (error) {
@@ -66,7 +78,15 @@ router.put('/:logId', protect, async (req, res) => {
   try {
     const user = req.user;
     const { logId } = req.params;
-    const { semester, date, type, problemIdentification, problemDetails, remedialAction, improvementProgress } = req.body;
+    const {
+      semester,
+      date,
+      type,
+      problemIdentification,
+      problemDetails,
+      remedialAction,
+      improvementProgress
+    } = req.body;
 
     const log = await AcademicLog.findById(logId);
     if (!log) {
@@ -83,13 +103,13 @@ router.put('/:logId', protect, async (req, res) => {
       return res.status(403).json({ message: 'You are not authorized to edit this log.' });
     }
 
-    if (semester) log.semester = semester;
-    if (date) log.date = date;
+    if (semester) log.semester = String(semester).trim();
+    if (date) log.date = new Date(date);
     if (type) log.type = type;
-    if (problemIdentification) log.problemIdentification = problemIdentification;
-    if (problemDetails) log.problemDetails = problemDetails;
-    if (remedialAction) log.remedialAction = remedialAction;
-    if (improvementProgress) log.improvementProgress = improvementProgress;
+    if (problemIdentification) log.problemIdentification = String(problemIdentification).trim();
+    if (problemDetails !== undefined) log.problemDetails = String(problemDetails).trim();
+    if (remedialAction !== undefined) log.remedialAction = String(remedialAction).trim();
+    if (improvementProgress !== undefined) log.improvementProgress = String(improvementProgress).trim();
 
     const updated = await log.save();
     return res.status(200).json(updated);

@@ -16,21 +16,25 @@ router.post('/', protect, async (req, res) => {
     }
 
     if (user.role === 'mentor' && !student.currentMentor.equals(user._id)) {
-      return res.status(403).json({ message: 'You are not authorized to add an activity for this student.' });
+      return res
+        .status(403)
+        .json({ message: 'You are not authorized to add an activity for this student.' });
     }
 
     if (user.role === 'hod' && student.department !== user.department) {
-      return res.status(403).json({ message: 'You can only add activities for students in your own department.' });
+      return res
+        .status(403)
+        .json({ message: 'You can only add activities for students in your own department.' });
     }
 
     const activity = new ActivityLog({
       studentId,
       mentorId: user._id,
-      semester,
-      date,
+      semester: semester ? String(semester).trim() : '',
+      date: date ? new Date(date) : new Date(),
       category,
-      title,
-      notes
+      title: title ? String(title).trim() : '',
+      notes: notes ? String(notes).trim() : ''
     });
 
     const saved = await activity.save();
@@ -43,16 +47,19 @@ router.post('/', protect, async (req, res) => {
 router.get('/:studentId', protect, async (req, res) => {
   try {
     const { studentId } = req.params;
-    const { semester } = req.query;
+    const { semester, category } = req.query;
 
     const filter = { studentId };
     if (semester) {
       filter.semester = semester;
     }
+    if (category) {
+      filter.category = category;
+    }
 
     const activities = await ActivityLog.find(filter)
       .populate('mentorId', 'name')
-      .sort({ date: 1, createdAt: 1 });
+      .sort({ semester: 1, slNo: 1, date: 1, createdAt: 1 });
 
     return res.status(200).json(activities);
   } catch (error) {
@@ -74,18 +81,22 @@ router.put('/:activityId', protect, async (req, res) => {
     const student = await Student.findById(activity.studentId);
 
     if (user.role === 'mentor' && !activity.mentorId.equals(user._id)) {
-      return res.status(403).json({ message: 'You are not authorized to edit this activity.' });
+      return res
+        .status(403)
+        .json({ message: 'You are not authorized to edit this activity.' });
     }
 
     if (user.role === 'hod' && student.department !== user.department) {
-      return res.status(403).json({ message: 'You are not authorized to edit this activity.' });
+      return res
+        .status(403)
+        .json({ message: 'You are not authorized to edit this activity.' });
     }
 
-    if (semester) activity.semester = semester;
-    if (date) activity.date = date;
+    if (semester) activity.semester = String(semester).trim();
+    if (date) activity.date = new Date(date);
     if (category) activity.category = category;
-    if (title) activity.title = title;
-    if (notes) activity.notes = notes;
+    if (title !== undefined) activity.title = String(title).trim();
+    if (notes !== undefined) activity.notes = String(notes).trim();
 
     const updated = await activity.save();
     return res.status(200).json(updated);
@@ -107,11 +118,15 @@ router.delete('/:activityId', protect, async (req, res) => {
     const student = await Student.findById(activity.studentId);
 
     if (user.role === 'mentor' && !activity.mentorId.equals(user._id)) {
-      return res.status(403).json({ message: 'You are not authorized to delete this activity.' });
+      return res
+        .status(403)
+        .json({ message: 'You are not authorized to delete this activity.' });
     }
 
     if (user.role === 'hod' && student.department !== user.department) {
-      return res.status(403).json({ message: 'You are not authorized to delete this activity.' });
+      return res
+        .status(403)
+        .json({ message: 'You are not authorized to delete this activity.' });
     }
 
     await ActivityLog.findByIdAndDelete(activityId);

@@ -1,0 +1,307 @@
+import React, { useEffect, useState } from 'react';
+import api from 'api';
+
+function AcademicLogSection({ studentId }) {
+  const [logs, setLogs] = useState([]);
+  const [semesterFilter, setSemesterFilter] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const [form, setForm] = useState({
+    semester: '',
+    date: '',
+    type: 'AP',
+    problemIdentification: '',
+    problemDetails: '',
+    remedialAction: '',
+    improvementProgress: ''
+  });
+
+  const loadLogs = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const params = {};
+      if (semesterFilter) params.semester = semesterFilter;
+      const res = await api.get(`/academic-logs/${studentId}`, { params });
+      setLogs(res.data || []);
+    } catch (e) {
+      const msg = e?.response?.data?.message || 'Failed to load academic logs';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (studentId) {
+      loadLogs();
+    }
+  }, [studentId, semesterFilter]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setError('');
+    setSuccess('');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    setSuccess('');
+    try {
+      const body = {
+        studentId,
+        semester: form.semester.trim(),
+        date: form.date,
+        type: form.type,
+        problemIdentification: form.problemIdentification.trim(),
+        problemDetails: form.problemDetails.trim(),
+        remedialAction: form.remedialAction.trim(),
+        improvementProgress: form.improvementProgress.trim()
+      };
+      const res = await api.post('/academic-logs', body);
+      setSuccess('Academic log added successfully');
+      setForm({
+        semester: '',
+        date: '',
+        type: 'AP',
+        problemIdentification: '',
+        problemDetails: '',
+        remedialAction: '',
+        improvementProgress: ''
+      });
+      setLogs((prev) => [...prev, res.data]);
+    } catch (e) {
+      const msg = e?.response?.data?.message || 'Failed to add academic log';
+      setError(msg);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this academic log?')) return;
+    setError('');
+    setSuccess('');
+    try {
+      await api.delete(`/academic-logs/${id}`);
+      setLogs((prev) => prev.filter((log) => log._id !== id));
+      setSuccess('Academic log deleted');
+    } catch (e) {
+      const msg = e?.response?.data?.message || 'Failed to delete log';
+      setError(msg);
+    }
+  };
+
+  return (
+    <div className="card" style={{ marginTop: 24 }}>
+      <h3 className="card-title" style={{ marginBottom: 8 }}>
+        Academic / Personal Problems Log
+      </h3>
+      <p className="muted" style={{ marginBottom: 16 }}>
+        Record AP/PP issues, actions taken and progress for each semester.
+      </p>
+
+      <div
+        style={{
+          display: 'flex',
+          gap: 12,
+          alignItems: 'center',
+          marginBottom: 16,
+          flexWrap: 'wrap'
+        }}
+      >
+        <div>
+          <span className="muted" style={{ fontSize: 12 }}>
+            Filter by Semester
+          </span>
+          <input
+            className="input"
+            placeholder="e.g., Sem 1, 1, I"
+            value={semesterFilter}
+            onChange={(e) => setSemesterFilter(e.target.value)}
+            style={{ marginTop: 4, minWidth: 140 }}
+          />
+        </div>
+        <button
+          className="form-btn"
+          type="button"
+          onClick={loadLogs}
+          disabled={loading}
+          style={{ marginTop: 18, paddingInline: 16 }}
+        >
+          {loading ? 'Refreshing...' : 'Refresh'}
+        </button>
+      </div>
+
+      <form
+        onSubmit={handleSubmit}
+        className="form-card"
+        style={{ marginTop: 8, background: 'rgba(15,23,42,0.6)' }}
+      >
+        <h4 className="form-title">Add Entry</h4>
+        <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+          <div className="field">
+            <label className="label">Semester</label>
+            <input
+              name="semester"
+              value={form.semester}
+              onChange={handleChange}
+              className="input"
+              placeholder="Sem 1 / 1 / I"
+              required
+            />
+          </div>
+          <div className="field">
+            <label className="label">Date</label>
+            <input
+              type="date"
+              name="date"
+              value={form.date}
+              onChange={handleChange}
+              className="input"
+              required
+            />
+          </div>
+          <div className="field">
+            <label className="label">Type</label>
+            <select
+              name="type"
+              value={form.type}
+              onChange={handleChange}
+              className="input"
+            >
+              <option value="AP">Academic Problem (AP)</option>
+              <option value="PP">Personal Problem (PP)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+          <div className="field">
+            <label className="label">Problem Identification</label>
+            <textarea
+              name="problemIdentification"
+              value={form.problemIdentification}
+              onChange={handleChange}
+              className="input"
+              rows={2}
+              required
+            />
+          </div>
+          <div className="field">
+            <label className="label">Problem Details</label>
+            <textarea
+              name="problemDetails"
+              value={form.problemDetails}
+              onChange={handleChange}
+              className="input"
+              rows={2}
+            />
+          </div>
+          <div className="field">
+            <label className="label">Remedial Action</label>
+            <textarea
+              name="remedialAction"
+              value={form.remedialAction}
+              onChange={handleChange}
+              className="input"
+              rows={2}
+            />
+          </div>
+          <div className="field">
+            <label className="label">Improvement / Progress</label>
+            <textarea
+              name="improvementProgress"
+              value={form.improvementProgress}
+              onChange={handleChange}
+              className="input"
+              rows={2}
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          className="form-btn"
+          disabled={saving}
+          style={{ marginTop: 12 }}
+        >
+          {saving ? 'Saving...' : 'Add Log'}
+        </button>
+
+        <div className="msg-wrap" style={{ marginTop: 8 }}>
+          {error && <p className="msg-err">{error}</p>}
+          {success && <p className="msg-ok">{success}</p>}
+        </div>
+      </form>
+
+      <div style={{ marginTop: 20 }}>
+        <h4 className="form-title" style={{ marginBottom: 8 }}>
+          Logged Entries
+        </h4>
+        {logs.length === 0 && !loading && (
+          <p className="muted" style={{ fontSize: 13 }}>
+            No entries yet for this student.
+          </p>
+        )}
+        {logs.length > 0 && (
+          <div className="table-wrap" style={{ overflowX: 'auto' }}>
+            <table className="table text-sm" style={{ width: '100%', fontSize: 12 }}>
+              <thead>
+                <tr>
+                  <th>Sem</th>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Problem Identification</th>
+                  <th>Remedial Action</th>
+                  <th>Progress</th>
+                  <th>By</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log._id}>
+                    <td>{log.semester}</td>
+                    <td>
+                      {log.date
+                        ? new Date(log.date).toLocaleDateString()
+                        : ''}
+                    </td>
+                    <td>{log.type}</td>
+                    <td>{log.problemIdentification}</td>
+                    <td>{log.remedialAction}</td>
+                    <td>{log.improvementProgress}</td>
+                    <td>{log.mentorId?.name || '-'}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="form-btn"
+                        onClick={() => handleDelete(log._id)}
+                        style={{
+                          background: '#dc2626',
+                          padding: '4px 10px',
+                          fontSize: 11
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default AcademicLogSection;
