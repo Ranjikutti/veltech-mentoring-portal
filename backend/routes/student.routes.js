@@ -170,9 +170,9 @@ router.put('/:studentId/assign-mentor', protect, isHod, async (req, res) => {
 });
 
 // -----------------------------------------------------------
-// ROUTE 6: Delete a student (HOD ONLY)
+// ROUTE 6: Delete a student  (HOD = full power, Mentor = own mentee)
 // -----------------------------------------------------------
-router.delete('/:studentId', protect, isHod, async (req, res) => {
+router.delete('/:studentId', protect, async (req, res) => {
   try {
     const { studentId } = req.params;
     const user = req.user;
@@ -182,13 +182,22 @@ router.delete('/:studentId', protect, isHod, async (req, res) => {
       return res.status(404).json({ message: 'Student not found.' });
     }
 
-    // extra safety: HOD can only delete from their department
-    if (user.department && student.department && user.department !== student.department) {
-      return res
-        .status(403)
-        .json({ message: 'You can delete students only from your department.' });
+    // 🔹 HOD: can delete ANY student
+    if (user.role === 'hod') {
+      // no extra restriction – HoD is boss
+    }
+    // 🔹 Mentor: only their own mentee
+    else if (user.role === 'mentor') {
+      if (!student.currentMentor.equals(user._id)) {
+        return res
+          .status(403)
+          .json({ message: 'You are not authorized to delete this student.' });
+      }
+    } else {
+      return res.status(403).json({ message: 'Only HOD or Mentor can delete a student.' });
     }
 
+    // Delete all associated records for this student
     await Promise.all([
       Assessment.deleteMany({ studentId }),
       Intervention.deleteMany({ studentId }),
