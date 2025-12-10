@@ -23,7 +23,13 @@ function ManageHodsPage() {
       setError('');
       setLoading(true);
       const res = await api.get('/users/hods');
-      setHods(res.data || []);
+      const data = Array.isArray(res.data) ? res.data : [];
+      data.sort((a, b) => {
+        const depA = (a.department || '').localeCompare(b.department || '');
+        if (depA !== 0) return depA;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+      setHods(data);
     } catch (e) {
       const msg = e?.response?.data?.message || 'Failed to load HODs';
       setError(msg);
@@ -39,6 +45,8 @@ function ManageHodsPage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setError('');
+    setSuccess('');
   };
 
   const handleCreate = async (e) => {
@@ -65,7 +73,15 @@ function ManageHodsPage() {
         department: '',
         designation: ''
       });
-      setHods((prev) => [...prev, res.data]);
+      setHods((prev) => {
+        const next = [...prev, res.data];
+        next.sort((a, b) => {
+          const depA = (a.department || '').localeCompare(b.department || '');
+          if (depA !== 0) return depA;
+          return (a.name || '').localeCompare(b.name || '');
+        });
+        return next;
+      });
     } catch (e) {
       const msg = e?.response?.data?.message || 'Failed to create HOD';
       setError(msg);
