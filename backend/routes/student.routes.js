@@ -5,6 +5,8 @@ const Student = require('../models/student.model.js');
 const User = require('../models/user.model.js');
 const Assessment = require('../models/assessment.model.js');
 const Intervention = require('../models/intervention.model.js');
+const AcademicLog = require('../models/academicLog.model.js');
+const ActivityLog = require('../models/activityLog.model.js');
 
 const { protect, isHod } = require('../middleware/auth.middleware.js');
 
@@ -164,6 +166,43 @@ router.put('/:studentId/assign-mentor', protect, isHod, async (req, res) => {
     res.status(200).json({ message: 'Mentor successfully reassigned.', student });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// -----------------------------------------------------------
+// ROUTE 6: Delete a student (HOD ONLY)
+// -----------------------------------------------------------
+router.delete('/:studentId', protect, isHod, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const user = req.user;
+
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found.' });
+    }
+
+    // extra safety: HOD can only delete from their department
+    if (user.department && student.department && user.department !== student.department) {
+      return res
+        .status(403)
+        .json({ message: 'You can delete students only from your department.' });
+    }
+
+    await Promise.all([
+      Assessment.deleteMany({ studentId }),
+      Intervention.deleteMany({ studentId }),
+      AcademicLog.deleteMany({ studentId }),
+      ActivityLog.deleteMany({ studentId })
+    ]);
+
+    await Student.findByIdAndDelete(studentId);
+
+    return res.status(200).json({ message: 'Student deleted successfully.' });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: 'Server error while deleting student.', error: error.message });
   }
 });
 
