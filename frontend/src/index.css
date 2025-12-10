@@ -82,21 +82,24 @@ code {
   box-shadow: 0 0 0 3px rgba(56, 189, 248, .25);
 }
 
-select.input {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+/* dedicated dark dropdown style, only when we use className="select" */
+.select {
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, .35);
   background: rgba(15, 23, 42, .95);
+  padding: 0 12px;
   color: #e5e7eb;
-  cursor: pointer;
+  outline: none;
+  transition: border .2s, box-shadow .2s;
 }
 
-select.input option {
+.select option {
   background: #020617;
   color: #e5e7eb;
 }
 
-select.input:focus {
+.select:focus {
   border-color: #38bdf8;
   box-shadow: 0 0 0 3px rgba(56, 189, 248, .25);
 }
@@ -735,22 +738,6 @@ select.input:focus {
 .form-card .textarea:focus {
   border-color: #38bdf8;
   box-shadow: 0 0 0 3px rgba(56, 189, 248, .25);
-}
-
-.form-card .select {
-  height: 38px;
-  border-radius: 8px;
-  border: 1px solid rgba(148, 163, 184, .35);
-  background: rgba(255, 255, 255, .08);
-  padding: 0 10px;
-  color: #e5e7eb;
-  outline: none;
-  transition: border .2s, box-shadow .2s;
-}
-
-.form-card .select option {
-  background: #0f172a;
-  color: #e5e7eb;
 }
 
 .prp-wrap.loading {

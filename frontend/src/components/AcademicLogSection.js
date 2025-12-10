@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import api from 'api'
-import DarkSelect from './DarkSelect'
-
-const TYPE_OPTIONS = [
-  { value: 'AP', label: 'Academic Problem (AP)' },
-  { value: 'PP', label: 'Personal Problem (PP)' }
-]
 
 function AcademicLogSection({ studentId }) {
   const [logs, setLogs] = useState([])
@@ -179,13 +173,15 @@ function AcademicLogSection({ studentId }) {
             </div>
             <div className="field">
               <label className="label">Type</label>
-              <DarkSelect
-                options={TYPE_OPTIONS}
+              <select
+                name="type"
                 value={form.type}
-                onChange={val =>
-                  setForm(prev => ({ ...prev, type: val }))
-                }
-              />
+                onChange={handleChange}
+                className="select"
+              >
+                <option value="AP">Academic Problem (AP)</option>
+                <option value="PP">Personal Problem (PP)</option>
+              </select>
             </div>
           </div>
 
