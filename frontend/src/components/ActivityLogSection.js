@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import api from 'api'
+import DarkSelect from './DarkSelect'
 
 const CATEGORY_OPTIONS = [
   'Conference',
@@ -14,6 +15,11 @@ const CATEGORY_OPTIONS = [
   'Culturals',
   'Sports'
 ]
+
+const CATEGORY_OPTION_OBJECTS = CATEGORY_OPTIONS.map(c => ({
+  value: c,
+  label: c
+}))
 
 function ActivityLogSection({ studentId }) {
   const [activities, setActivities] = useState([])
@@ -140,22 +146,18 @@ function ActivityLogSection({ studentId }) {
               onChange={e => setSemesterFilter(e.target.value)}
             />
           </div>
-          <div style={{ minWidth: 200 }}>
+          <div style={{ minWidth: 220 }}>
             <label className="label" style={{ fontSize: 12 }}>
               Filter by Category
             </label>
-            <select
-              className="input"
+            <DarkSelect
+              options={[
+                { value: '', label: 'All' },
+                ...CATEGORY_OPTION_OBJECTS
+              ]}
               value={categoryFilter}
-              onChange={e => setCategoryFilter(e.target.value)}
-            >
-              <option value="">All</option>
-              {CATEGORY_OPTIONS.map(c => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+              onChange={val => setCategoryFilter(val)}
+            />
           </div>
           <button
             className="form-btn"
@@ -200,18 +202,13 @@ function ActivityLogSection({ studentId }) {
             </div>
             <div className="field">
               <label className="label">Category</label>
-              <select
-                name="category"
+              <DarkSelect
+                options={CATEGORY_OPTION_OBJECTS}
                 value={form.category}
-                onChange={handleChange}
-                className="input"
-              >
-                {CATEGORY_OPTIONS.map(c => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+                onChange={val =>
+                  setForm(prev => ({ ...prev, category: val }))
+                }
+              />
             </div>
           </div>
 
