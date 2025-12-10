@@ -367,7 +367,7 @@ function MenteeDetailsPage() {
                       
                     </div>
                   ))}
-                </div>
+                 </div>
               )}
             </div>
           </div>
