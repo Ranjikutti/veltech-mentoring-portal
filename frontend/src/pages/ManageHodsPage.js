@@ -113,113 +113,115 @@ function ManageHodsPage() {
 
   return (
     <div className="mlp">
-      <div className="container" style={{ maxWidth: '900px' }}>
+      <div className="container" style={{ maxWidth: '1000px' }}>
         <Link to="/dashboard" className="back">
           ← Back to Dashboard
         </Link>
 
         <div className="panel" style={{ marginTop: '16px' }}>
           <div className="panel-body">
-            <div className="header">
-              <div>
-                <h2 className="title">Manage HODs</h2>
-                <p className="meta">Create and remove Head of Department profiles for each department.</p>
-              </div>
-            </div>
+            <h4 className="form-title" style={{ marginBottom: 18 }}>
+              Manage HODs
+            </h4>
 
             <div
               style={{
-                marginTop: 18,
                 display: 'grid',
-                gap: 18,
-                gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 1.1fr)'
+                gap: 20,
+                gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+                alignItems: 'flex-start'
               }}
             >
-              <div className="form-card">
+              <form
+                onSubmit={handleCreate}
+                className="form-card"
+                style={{ margin: 0 }}
+              >
                 <h4 className="form-title">Create New HOD</h4>
-                <form onSubmit={handleCreate}>
-                  <div className="form-grid">
-                    <div className="field">
-                      <label className="label">Name</label>
-                      <input
-                        name="name"
-                        value={form.name}
-                        onChange={handleChange}
-                        className="input"
-                        required
-                      />
-                    </div>
-                    <div className="field">
-                      <label className="label">Email</label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={form.email}
-                        onChange={handleChange}
-                        className="input"
-                        required
-                      />
-                    </div>
-                    <div className="field">
-                      <label className="label">Password</label>
-                      <input
-                        type="password"
-                        name="password"
-                        value={form.password}
-                        onChange={handleChange}
-                        className="input"
-                        required
-                      />
-                    </div>
-                    <div className="field">
-                      <label className="label">MTS Number</label>
-                      <input
-                        name="mtsNumber"
-                        value={form.mtsNumber}
-                        onChange={handleChange}
-                        className="input"
-                        required
-                      />
-                    </div>
-                    <div className="field">
-                      <label className="label">Department</label>
-                      <input
-                        name="department"
-                        value={form.department}
-                        onChange={handleChange}
-                        placeholder="CSE, ECE, IT, MECH"
-                        className="input"
-                        required
-                      />
-                    </div>
-                    <div className="field">
-                      <label className="label">Designation</label>
-                      <input
-                        name="designation"
-                        value={form.designation}
-                        onChange={handleChange}
-                        placeholder="HOD, Professor"
-                        className="input"
-                        required
-                      />
-                    </div>
+                <div
+                  className="form-grid"
+                  style={{ gridTemplateColumns: '1fr 1fr' }}
+                >
+                  <div className="field">
+                    <label className="label">Name</label>
+                    <input
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      className="input"
+                      required
+                    />
                   </div>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="form-btn"
-                    style={{ marginTop: 18, minWidth: 140 }}
-                  >
-                    {saving ? 'Creating...' : 'Create HOD'}
-                  </button>
-                  <div className="msg-wrap">
-                    {error && <p className="msg-err">{error}</p>}
-                    {success && <p className="msg-ok">{success}</p>}
+                  <div className="field">
+                    <label className="label">Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      className="input"
+                      required
+                    />
                   </div>
-                </form>
-              </div>
+                  <div className="field">
+                    <label className="label">Password</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={form.password}
+                      onChange={handleChange}
+                      className="input"
+                      required
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="label">MTS Number</label>
+                    <input
+                      name="mtsNumber"
+                      value={form.mtsNumber}
+                      onChange={handleChange}
+                      className="input"
+                      required
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="label">Department</label>
+                    <input
+                      name="department"
+                      value={form.department}
+                      onChange={handleChange}
+                      placeholder="CSE, ECE, IT, MECH"
+                      className="input"
+                      required
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="label">Designation</label>
+                    <input
+                      name="designation"
+                      value={form.designation}
+                      onChange={handleChange}
+                      placeholder="HOD, Professor"
+                      className="input"
+                      required
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="form-btn"
+                  style={{ marginTop: 18, minWidth: 150 }}
+                >
+                  {saving ? 'Creating...' : 'Create HOD'}
+                </button>
+                <div className="msg-wrap">
+                  {error && <p className="msg-err">{error}</p>}
+                  {success && <p className="msg-ok">{success}</p>}
+                </div>
+              </form>
 
-              <div className="form-card">
+              <div className="form-card" style={{ margin: 0 }}>
                 <h4 className="form-title">Existing HODs</h4>
                 <div
                   style={{
@@ -274,10 +276,22 @@ function ManageHodsPage() {
                             ({hod.department})
                           </span>
                         </div>
-                        <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 2 }}>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: '#cbd5e1',
+                            marginTop: 2
+                          }}
+                        >
                           {hod.email}
                         </div>
-                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: '#94a3b8',
+                            marginTop: 2
+                          }}
+                        >
                           {hod.mtsNumber} • {hod.designation}
                         </div>
                       </div>
@@ -299,8 +313,8 @@ function ManageHodsPage() {
                   ))}
                 </div>
               </div>
-            </div>
 
+            </div>
           </div>
         </div>
       </div>
