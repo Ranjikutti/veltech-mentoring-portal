@@ -8,7 +8,6 @@ function AcademicLogSection({ studentId }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
   const [form, setForm] = useState({
     semester: '',
     date: '',
@@ -36,9 +35,7 @@ function AcademicLogSection({ studentId }) {
   };
 
   useEffect(() => {
-    if (studentId) {
-      loadLogs();
-    }
+    if (studentId) loadLogs();
   }, [studentId, semesterFilter]);
 
   const handleChange = (e) => {
@@ -99,206 +96,199 @@ function AcademicLogSection({ studentId }) {
   };
 
   return (
-    <div className="card" style={{ marginTop: 24 }}>
-      <h3 className="card-title" style={{ marginBottom: 8 }}>
-        Academic / Personal Problems Log
-      </h3>
-      <p className="muted" style={{ marginBottom: 16 }}>
-        Record AP/PP issues, actions taken and progress for each semester.
-      </p>
+    <div className="section">
+      <div className="card">
+        <h3 className="card-title" style={{ marginBottom: 4 }}>
+          Academic / Personal Problems Log
+        </h3>
+        <p className="muted" style={{ marginBottom: 16, fontSize: 13 }}>
+          Record AP/PP issues, actions taken and progress for each semester.
+        </p>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: 12,
-          alignItems: 'center',
-          marginBottom: 16,
-          flexWrap: 'wrap'
-        }}
-      >
-        <div>
-          <span className="muted" style={{ fontSize: 12 }}>
-            Filter by Semester
-          </span>
-          <input
-            className="input"
-            placeholder="e.g., Sem 1, 1, I"
-            value={semesterFilter}
-            onChange={(e) => setSemesterFilter(e.target.value)}
-            style={{ marginTop: 4, minWidth: 140 }}
-          />
-        </div>
-        <button
-          className="form-btn"
-          type="button"
-          onClick={loadLogs}
-          disabled={loading}
-          style={{ marginTop: 18, paddingInline: 16 }}
+        <div
+          style={{
+            display: 'flex',
+            gap: 12,
+            alignItems: 'flex-end',
+            marginBottom: 16,
+            flexWrap: 'wrap'
+          }}
         >
-          {loading ? 'Refreshing...' : 'Refresh'}
-        </button>
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="form-card"
-        style={{ marginTop: 8, background: 'rgba(15,23,42,0.6)' }}
-      >
-        <h4 className="form-title">Add Entry</h4>
-        <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-          <div className="field">
-            <label className="label">Semester</label>
+          <div style={{ minWidth: 220 }}>
+            <label className="label" style={{ fontSize: 12 }}>
+              Filter by Semester
+            </label>
             <input
-              name="semester"
-              value={form.semester}
-              onChange={handleChange}
               className="input"
-              placeholder="Sem 1 / 1 / I"
-              required
+              placeholder="e.g., Sem 1, 1, I"
+              value={semesterFilter}
+              onChange={(e) => setSemesterFilter(e.target.value)}
             />
           </div>
-          <div className="field">
-            <label className="label">Date</label>
-            <input
-              type="date"
-              name="date"
-              value={form.date}
-              onChange={handleChange}
-              className="input"
-              required
-            />
-          </div>
-          <div className="field">
-            <label className="label">Type</label>
-            <select
-              name="type"
-              value={form.type}
-              onChange={handleChange}
-              className="input"
-            >
-              <option value="AP">Academic Problem (AP)</option>
-              <option value="PP">Personal Problem (PP)</option>
-            </select>
-          </div>
+          <button
+            className="form-btn"
+            type="button"
+            onClick={loadLogs}
+            disabled={loading}
+            style={{ padding: '8px 18px', fontSize: 12 }}
+          >
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </button>
         </div>
 
-        <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-          <div className="field">
-            <label className="label">Problem Identification</label>
-            <textarea
-              name="problemIdentification"
-              value={form.problemIdentification}
-              onChange={handleChange}
-              className="input"
-              rows={2}
-              required
-            />
-          </div>
-          <div className="field">
-            <label className="label">Problem Details</label>
-            <textarea
-              name="problemDetails"
-              value={form.problemDetails}
-              onChange={handleChange}
-              className="input"
-              rows={2}
-            />
-          </div>
-          <div className="field">
-            <label className="label">Remedial Action</label>
-            <textarea
-              name="remedialAction"
-              value={form.remedialAction}
-              onChange={handleChange}
-              className="input"
-              rows={2}
-            />
-          </div>
-          <div className="field">
-            <label className="label">Improvement / Progress</label>
-            <textarea
-              name="improvementProgress"
-              value={form.improvementProgress}
-              onChange={handleChange}
-              className="input"
-              rows={2}
-            />
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          className="form-btn"
-          disabled={saving}
-          style={{ marginTop: 12 }}
+        <form
+          onSubmit={handleSubmit}
+          className="form-card"
+          style={{ background: 'rgba(15,23,42,0.6)', marginTop: 4 }}
         >
-          {saving ? 'Saving...' : 'Add Log'}
-        </button>
+          <h4 className="form-title">Add Entry</h4>
+          <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+            <div className="field">
+              <label className="label">Semester</label>
+              <input
+                name="semester"
+                value={form.semester}
+                onChange={handleChange}
+                className="input"
+                placeholder="Sem 1 / 1 / I"
+                required
+              />
+            </div>
+            <div className="field">
+              <label className="label">Date</label>
+              <input
+                type="date"
+                name="date"
+                value={form.date}
+                onChange={handleChange}
+                className="input"
+                required
+              />
+            </div>
+            <div className="field">
+              <label className="label">Type</label>
+              <select
+                name="type"
+                value={form.type}
+                onChange={handleChange}
+                className="input"
+              >
+                <option value="AP">Academic Problem (AP)</option>
+                <option value="PP">Personal Problem (PP)</option>
+              </select>
+            </div>
+          </div>
 
-        <div className="msg-wrap" style={{ marginTop: 8 }}>
-          {error && <p className="msg-err">{error}</p>}
-          {success && <p className="msg-ok">{success}</p>}
-        </div>
-      </form>
+          <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+            <div className="field">
+              <label className="label">Problem Identification</label>
+              <textarea
+                name="problemIdentification"
+                value={form.problemIdentification}
+                onChange={handleChange}
+                className="input"
+                rows={2}
+                required
+              />
+            </div>
+            <div className="field">
+              <label className="label">Problem Details</label>
+              <textarea
+                name="problemDetails"
+                value={form.problemDetails}
+                onChange={handleChange}
+                className="input"
+                rows={2}
+              />
+            </div>
+            <div className="field">
+              <label className="label">Remedial Action</label>
+              <textarea
+                name="remedialAction"
+                value={form.remedialAction}
+                onChange={handleChange}
+                className="input"
+                rows={2}
+              />
+            </div>
+            <div className="field">
+              <label className="label">Improvement / Progress</label>
+              <textarea
+                name="improvementProgress"
+                value={form.improvementProgress}
+                onChange={handleChange}
+                className="input"
+                rows={2}
+              />
+            </div>
+          </div>
 
-      <div style={{ marginTop: 20 }}>
-        <h4 className="form-title" style={{ marginBottom: 8 }}>
-          Logged Entries
-        </h4>
-        {logs.length === 0 && !loading && (
-          <p className="muted" style={{ fontSize: 13 }}>
-            No entries yet for this student.
-          </p>
-        )}
-        {logs.length > 0 && (
-          <div className="table-wrap" style={{ overflowX: 'auto' }}>
-            <table className="table text-sm" style={{ width: '100%', fontSize: 12 }}>
-              <thead>
-                <tr>
-                  <th>Sem</th>
-                  <th>Date</th>
-                  <th>Type</th>
-                  <th>Problem Identification</th>
-                  <th>Remedial Action</th>
-                  <th>Progress</th>
-                  <th>By</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((log) => (
-                  <tr key={log._id}>
-                    <td>{log.semester}</td>
-                    <td>
-                      {log.date
-                        ? new Date(log.date).toLocaleDateString()
-                        : ''}
-                    </td>
-                    <td>{log.type}</td>
-                    <td>{log.problemIdentification}</td>
-                    <td>{log.remedialAction}</td>
-                    <td>{log.improvementProgress}</td>
-                    <td>{log.mentorId?.name || '-'}</td>
-                    <td>
-                      <button
-                        type="button"
-                        className="form-btn"
-                        onClick={() => handleDelete(log._id)}
-                        style={{
-                          background: '#dc2626',
-                          padding: '4px 10px',
-                          fontSize: 11
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </td>
+          <button
+            type="submit"
+            className="form-btn"
+            disabled={saving}
+            style={{ marginTop: 12 }}
+          >
+            {saving ? 'Saving...' : 'Add Log'}
+          </button>
+
+          <div className="msg-wrap" style={{ marginTop: 8 }}>
+            {error && <p className="msg-err">{error}</p>}
+            {success && <p className="msg-ok">{success}</p>}
+          </div>
+        </form>
+
+        <div style={{ marginTop: 20 }}>
+          <h4 className="form-title" style={{ marginBottom: 8 }}>
+            Logged Entries
+          </h4>
+          {logs.length === 0 && !loading && (
+            <p className="muted" style={{ fontSize: 13 }}>
+              No entries yet for this student.
+            </p>
+          )}
+          {logs.length > 0 && (
+            <div className="table-wrap" style={{ overflowX: 'auto' }}>
+              <table className="table text-sm" style={{ width: '100%', fontSize: 12 }}>
+                <thead>
+                  <tr>
+                    <th>Sem</th>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Problem Identification</th>
+                    <th>Remedial Action</th>
+                    <th>Progress</th>
+                    <th>By</th>
+                    <th></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {logs.map((log) => (
+                    <tr key={log._id}>
+                      <td>{log.semester}</td>
+                      <td>{log.date ? new Date(log.date).toLocaleDateString() : ''}</td>
+                      <td>{log.type}</td>
+                      <td>{log.problemIdentification}</td>
+                      <td>{log.remedialAction}</td>
+                      <td>{log.improvementProgress}</td>
+                      <td>{log.mentorId?.name || '-'}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="form-btn"
+                          onClick={() => handleDelete(log._id)}
+                          style={{ background: '#dc2626', padding: '4px 10px', fontSize: 11 }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

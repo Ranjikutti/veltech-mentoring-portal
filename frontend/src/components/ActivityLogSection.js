@@ -23,7 +23,6 @@ function ActivityLogSection({ studentId }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
   const [form, setForm] = useState({
     semester: '',
     date: '',
@@ -50,9 +49,7 @@ function ActivityLogSection({ studentId }) {
   };
 
   useEffect(() => {
-    if (studentId) {
-      loadActivities();
-    }
+    if (studentId) loadActivities();
   }, [studentId, semesterFilter, categoryFilter]);
 
   const handleChange = (e) => {
@@ -109,101 +106,45 @@ function ActivityLogSection({ studentId }) {
   };
 
   return (
-    <div className="card" style={{ marginTop: 24 }}>
-      <h3 className="card-title" style={{ marginBottom: 8 }}>
-        Co / Extra Curricular Activities
-      </h3>
-      <p className="muted" style={{ marginBottom: 16 }}>
-        Track conferences, projects, sports and other achievements by semester.
-      </p>
+    <div className="section">
+      <div className="card">
+        <h3 className="card-title" style={{ marginBottom: 4 }}>
+          Co / Extra Curricular Activities
+        </h3>
+        <p className="muted" style={{ marginBottom: 16, fontSize: 13 }}>
+          Track conferences, projects, sports and other achievements by semester.
+        </p>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: 12,
-          alignItems: 'flex-end',
-          marginBottom: 16,
-          flexWrap: 'wrap'
-        }}
-      >
-        <div>
-          <span className="muted" style={{ fontSize: 12 }}>
-            Filter by Semester
-          </span>
-          <input
-            className="input"
-            placeholder="e.g., Sem 1"
-            value={semesterFilter}
-            onChange={(e) => setSemesterFilter(e.target.value)}
-            style={{ marginTop: 4, minWidth: 140 }}
-          />
-        </div>
-        <div>
-          <span className="muted" style={{ fontSize: 12 }}>
-            Filter by Category
-          </span>
-          <select
-            className="input"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            style={{ marginTop: 4, minWidth: 160 }}
-          >
-            <option value="">All</option>
-            {CATEGORY_OPTIONS.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button
-          className="form-btn"
-          type="button"
-          onClick={loadActivities}
-          disabled={loading}
-          style={{ marginTop: 18, paddingInline: 16 }}
+        <div
+          style={{
+            display: 'flex',
+            gap: 12,
+            alignItems: 'flex-end',
+            marginBottom: 16,
+            flexWrap: 'wrap'
+          }}
         >
-          {loading ? 'Refreshing...' : 'Refresh'}
-        </button>
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="form-card"
-        style={{ marginTop: 8, background: 'rgba(15,23,42,0.6)' }}
-      >
-        <h4 className="form-title">Add Activity</h4>
-        <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-          <div className="field">
-            <label className="label">Semester</label>
+          <div style={{ minWidth: 180 }}>
+            <label className="label" style={{ fontSize: 12 }}>
+              Filter by Semester
+            </label>
             <input
-              name="semester"
-              value={form.semester}
-              onChange={handleChange}
               className="input"
-              placeholder="Sem 1 / 1 / I"
-              required
+              placeholder="e.g., Sem 1"
+              value={semesterFilter}
+              onChange={(e) => setSemesterFilter(e.target.value)}
             />
           </div>
-          <div className="field">
-            <label className="label">Date</label>
-            <input
-              type="date"
-              name="date"
-              value={form.date}
-              onChange={handleChange}
-              className="input"
-              required
-            />
-          </div>
-          <div className="field">
-            <label className="label">Category</label>
+          <div style={{ minWidth: 180 }}>
+            <label className="label" style={{ fontSize: 12 }}>
+              Filter by Category
+            </label>
             <select
-              name="category"
-              value={form.category}
-              onChange={handleChange}
               className="input"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
             >
+              <option value="">All</option>
               {CATEGORY_OPTIONS.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -211,7 +152,62 @@ function ActivityLogSection({ studentId }) {
               ))}
             </select>
           </div>
+          <button
+            className="form-btn"
+            type="button"
+            onClick={loadActivities}
+            disabled={loading}
+            style={{ padding: '8px 18px', fontSize: 12 }}
+          >
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </button>
         </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="form-card"
+          style={{ background: 'rgba(15,23,42,0.6)', marginTop: 4 }}
+        >
+          <h4 className="form-title">Add Activity</h4>
+          <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+            <div className="field">
+              <label className="label">Semester</label>
+              <input
+                name="semester"
+                value={form.semester}
+                onChange={handleChange}
+                className="input"
+                placeholder="Sem 1 / 1 / I"
+                required
+              />
+            </div>
+            <div className="field">
+              <label className="label">Date</label>
+              <input
+                type="date"
+                name="date"
+                value={form.date}
+                onChange={handleChange}
+                className="input"
+                required
+              />
+            </div>
+            <div className="field">
+              <label className="label">Category</label>
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="input"
+              >
+                {CATEGORY_OPTIONS.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
         <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <div className="field">
@@ -245,7 +241,6 @@ function ActivityLogSection({ studentId }) {
         >
           {saving ? 'Saving...' : 'Add Activity'}
         </button>
-
       </form>
 
       <div className="msg-wrap" style={{ marginTop: 8 }}>
@@ -280,9 +275,7 @@ function ActivityLogSection({ studentId }) {
                 {activities.map((a) => (
                   <tr key={a._id}>
                     <td>{a.semester}</td>
-                    <td>
-                      {a.date ? new Date(a.date).toLocaleDateString() : ''}
-                    </td>
+                    <td>{a.date ? new Date(a.date).toLocaleDateString() : ''}</td>
                     <td>{a.category}</td>
                     <td>{a.title}</td>
                     <td>{a.notes}</td>
@@ -292,11 +285,7 @@ function ActivityLogSection({ studentId }) {
                         type="button"
                         className="form-btn"
                         onClick={() => handleDelete(a._id)}
-                        style={{
-                          background: '#dc2626',
-                          padding: '4px 10px',
-                          fontSize: 11
-                        }}
+                        style={{ background: '#dc2626', padding: '4px 10px', fontSize: 11 }}
                       >
                         Delete
                       </button>
@@ -309,6 +298,7 @@ function ActivityLogSection({ studentId }) {
         )}
       </div>
     </div>
+  </div>
   );
 }
 
