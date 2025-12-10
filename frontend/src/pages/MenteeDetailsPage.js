@@ -9,6 +9,7 @@ import AcademicLogSection from '../components/AcademicLogSection'
 import ActivityLogSection from '../components/ActivityLogSection'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { toast } from 'react-toastify'
 
 function MenteeDetailsPage() {
   const [student, setStudent] = useState(null)
@@ -42,13 +43,15 @@ function MenteeDetailsPage() {
   }, [fetchStudentDetails, student])
 
   const handleDeleteAssessment = async assessmentId => {
-    if (window.confirm('Are you sure you want to delete this assessment record?')) {
-      try {
-        await api.delete(`/assessments/${assessmentId}`)
-        fetchStudentDetails()
-      } catch {
-        alert('Failed to delete assessment.')
-      }
+    const ok = window.confirm('Are you sure you want to delete this assessment record?')
+    if (!ok) return
+    try {
+      await api.delete(`/assessments/${assessmentId}`)
+      toast.success('Assessment deleted successfully')
+      fetchStudentDetails()
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Failed to delete assessment.'
+      toast.error(msg)
     }
   }
 
@@ -65,18 +68,21 @@ function MenteeDetailsPage() {
   const handleFormSave = () => {
     setShowAssessmentForm(false)
     fetchStudentDetails()
+    toast.success('Assessment saved successfully')
   }
 
   const handleFormCancel = () => setShowAssessmentForm(false)
 
   const handleDeleteIntervention = async interventionId => {
-    if (window.confirm('Are you sure you want to delete this intervention log?')) {
-      try {
-        await api.delete(`/interventions/${interventionId}`)
-        fetchStudentDetails()
-      } catch {
-        alert('Failed to delete intervention.')
-      }
+    const ok = window.confirm('Are you sure you want to delete this intervention log?')
+    if (!ok) return
+    try {
+      await api.delete(`/interventions/${interventionId}`)
+      toast.success('Intervention deleted successfully')
+      fetchStudentDetails()
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Failed to delete intervention.'
+      toast.error(msg)
     }
   }
 
@@ -93,6 +99,7 @@ function MenteeDetailsPage() {
   const handleInterventionFormSave = () => {
     setShowInterventionForm(false)
     fetchStudentDetails()
+    toast.success('Intervention saved successfully')
   }
 
   const handleInterventionFormCancel = () => setShowInterventionForm(false)
@@ -244,8 +251,10 @@ function MenteeDetailsPage() {
       doc.text('Head of the Department', 160, finalY + 30)
 
       doc.save(`Mentoring_Report_${studentProfile.name}.pdf`)
+      toast.success('Report downloaded')
     } catch (err) {
-      alert('Failed to download report.')
+      const msg = err?.response?.data?.message || 'Failed to download report.'
+      toast.error(msg)
     } finally {
       setIsDownloading(false)
     }
