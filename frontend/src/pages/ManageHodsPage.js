@@ -18,18 +18,22 @@ function ManageHodsPage() {
     designation: ''
   });
 
+  const sortHods = (list) => {
+    const arr = Array.isArray(list) ? [...list] : [];
+    arr.sort((a, b) => {
+      const depA = (a.department || '').localeCompare(b.department || '');
+      if (depA !== 0) return depA;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+    return arr;
+  };
+
   const loadHods = async () => {
     try {
       setError('');
       setLoading(true);
       const res = await api.get('/users/hods');
-      const data = Array.isArray(res.data) ? res.data : [];
-      data.sort((a, b) => {
-        const depA = (a.department || '').localeCompare(b.department || '');
-        if (depA !== 0) return depA;
-        return (a.name || '').localeCompare(b.name || '');
-      });
-      setHods(data);
+      setHods(sortHods(res.data || []));
     } catch (e) {
       const msg = e?.response?.data?.message || 'Failed to load HODs';
       setError(msg);
@@ -73,15 +77,7 @@ function ManageHodsPage() {
         department: '',
         designation: ''
       });
-      setHods((prev) => {
-        const next = [...prev, res.data];
-        next.sort((a, b) => {
-          const depA = (a.department || '').localeCompare(b.department || '');
-          if (depA !== 0) return depA;
-          return (a.name || '').localeCompare(b.name || '');
-        });
-        return next;
-      });
+      setHods((prev) => sortHods([...prev, res.data]));
     } catch (e) {
       const msg = e?.response?.data?.message || 'Failed to create HOD';
       setError(msg);
@@ -107,151 +103,204 @@ function ManageHodsPage() {
     }
   };
 
+  if (loading && hods.length === 0) {
+    return (
+      <div className="mlp loading">
+        <div className="spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 px-4 py-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Manage HODs</h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Create and remove Head of Department profiles for each department.
-            </p>
-          </div>
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center rounded-lg border border-slate-700 px-3 py-1.5 text-sm hover:bg-slate-800"
-          >
-            ← Back to Dashboard
-          </Link>
-        </div>
+    <div className="mlp">
+      <div className="container" style={{ maxWidth: '900px' }}>
+        <Link to="/dashboard" className="back">
+          ← Back to Dashboard
+        </Link>
 
-        <div className="grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.2fr)]">
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-lg">
-            <h2 className="text-lg font-semibold mb-3">Create New HOD</h2>
-            <form className="space-y-3" onSubmit={handleCreate}>
-              <div className="space-y-1">
-                <label className="text-sm text-slate-300">Name</label>
-                <input
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm outline-none focus:ring focus:ring-sky-500/40"
-                  required
-                />
+        <div className="panel" style={{ marginTop: '16px' }}>
+          <div className="panel-body">
+            <div className="header">
+              <div>
+                <h2 className="title">Manage HODs</h2>
+                <p className="meta">Create and remove Head of Department profiles for each department.</p>
               </div>
-              <div className="space-y-1">
-                <label className="text-sm text-slate-300">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm outline-none focus:ring focus:ring-sky-500/40"
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm text-slate-300">Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm outline-none focus:ring focus:ring-sky-500/40"
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm text-slate-300">MTS Number</label>
-                <input
-                  name="mtsNumber"
-                  value={form.mtsNumber}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm outline-none focus:ring focus:ring-sky-500/40"
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm text-slate-300">Department</label>
-                <input
-                  name="department"
-                  value={form.department}
-                  onChange={handleChange}
-                  placeholder="CSE, ECE, IT, MECH"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm outline-none focus:ring focus:ring-sky-500/40"
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm text-slate-300">Designation</label>
-                <input
-                  name="designation"
-                  value={form.designation}
-                  onChange={handleChange}
-                  placeholder="HOD, Professor"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm outline-none focus:ring focus:ring-sky-500/40"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={saving}
-                className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {saving ? 'Creating...' : 'Create HOD'}
-              </button>
-            </form>
-            <div className="mt-3 space-y-1 text-sm">
-              {error && <div className="text-red-400">{error}</div>}
-              {success && <div className="text-emerald-400">{success}</div>}
             </div>
-          </div>
 
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-lg">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">Existing HODs</h2>
-              <button
-                onClick={loadHods}
-                disabled={loading}
-                className="text-xs rounded-lg border border-slate-700 px-3 py-1 hover:bg-slate-800 disabled:opacity-60"
-              >
-                {loading ? 'Refreshing...' : 'Refresh'}
-              </button>
-            </div>
-            {loading && hods.length === 0 && (
-              <div className="text-sm text-slate-400">Loading HODs...</div>
-            )}
-            {!loading && hods.length === 0 && (
-              <div className="text-sm text-slate-400">No HODs found yet.</div>
-            )}
-            <div className="space-y-2">
-              {hods.map((hod) => (
-                <div
-                  key={hod._id}
-                  className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm"
-                >
-                  <div>
-                    <div className="font-medium">
-                      {hod.name}{' '}
-                      <span className="text-xs text-sky-400">
-                        ({hod.department})
-                      </span>
+            <div
+              style={{
+                marginTop: 18,
+                display: 'grid',
+                gap: 18,
+                gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 1.1fr)'
+              }}
+            >
+              <div className="form-card">
+                <h4 className="form-title">Create New HOD</h4>
+                <form onSubmit={handleCreate}>
+                  <div className="form-grid">
+                    <div className="field">
+                      <label className="label">Name</label>
+                      <input
+                        name="name"
+                        value={form.name}
+                        onChange={handleChange}
+                        className="input"
+                        required
+                      />
                     </div>
-                    <div className="text-xs text-slate-400">{hod.email}</div>
-                    <div className="text-xs text-slate-500">
-                      {hod.mtsNumber} • {hod.designation}
+                    <div className="field">
+                      <label className="label">Email</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        className="input"
+                        required
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="label">Password</label>
+                      <input
+                        type="password"
+                        name="password"
+                        value={form.password}
+                        onChange={handleChange}
+                        className="input"
+                        required
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="label">MTS Number</label>
+                      <input
+                        name="mtsNumber"
+                        value={form.mtsNumber}
+                        onChange={handleChange}
+                        className="input"
+                        required
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="label">Department</label>
+                      <input
+                        name="department"
+                        value={form.department}
+                        onChange={handleChange}
+                        placeholder="CSE, ECE, IT, MECH"
+                        className="input"
+                        required
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="label">Designation</label>
+                      <input
+                        name="designation"
+                        value={form.designation}
+                        onChange={handleChange}
+                        placeholder="HOD, Professor"
+                        className="input"
+                        required
+                      />
                     </div>
                   </div>
                   <button
-                    onClick={() => handleDelete(hod._id)}
-                    disabled={deletingId === hod._id}
-                    className="text-xs rounded-lg bg-red-500/90 px-3 py-1 font-medium text-slate-50 hover:bg-red-400 disabled:opacity-60"
+                    type="submit"
+                    disabled={saving}
+                    className="form-btn"
+                    style={{ marginTop: 18, minWidth: 140 }}
                   >
-                    {deletingId === hod._id ? 'Deleting...' : 'Delete'}
+                    {saving ? 'Creating...' : 'Create HOD'}
+                  </button>
+                  <div className="msg-wrap">
+                    {error && <p className="msg-err">{error}</p>}
+                    {success && <p className="msg-ok">{success}</p>}
+                  </div>
+                </form>
+              </div>
+
+              <div className="form-card">
+                <h4 className="form-title">Existing HODs</h4>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 10
+                  }}
+                >
+                  <p className="muted" style={{ margin: 0, fontSize: 12 }}>
+                    Total: {hods.length}
+                  </p>
+                  <button
+                    onClick={loadHods}
+                    disabled={loading}
+                    className="form-btn"
+                    style={{
+                      height: 32,
+                      paddingInline: 12,
+                      marginTop: 0,
+                      fontSize: 12,
+                      background: '#020617'
+                    }}
+                  >
+                    {loading ? 'Refreshing...' : 'Refresh'}
                   </button>
                 </div>
-              ))}
+
+                {hods.length === 0 && !loading && (
+                  <div className="empty">No HODs found yet.</div>
+                )}
+
+                <div style={{ marginTop: 10, display: 'grid', gap: 10 }}>
+                  {hods.map((hod) => (
+                    <div
+                      key={hod._id}
+                      style={{
+                        borderRadius: 12,
+                        border: '1px solid rgba(148, 163, 184, .45)',
+                        background: 'rgba(15,23,42,.85)',
+                        padding: '10px 12px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 10
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 600 }}>
+                          {hod.name}{' '}
+                          <span style={{ fontSize: 11, color: '#38bdf8' }}>
+                            ({hod.department})
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 2 }}>
+                          {hod.email}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                          {hod.mtsNumber} • {hod.designation}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDelete(hod._id)}
+                        disabled={deletingId === hod._id}
+                        className="form-btn"
+                        style={{
+                          background: '#ef4444',
+                          height: 32,
+                          paddingInline: 14,
+                          marginTop: 0,
+                          fontSize: 12
+                        }}
+                      >
+                        {deletingId === hod._id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
+
           </div>
         </div>
       </div>
