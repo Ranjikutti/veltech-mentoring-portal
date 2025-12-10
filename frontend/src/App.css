@@ -36,3 +36,39 @@
     transform: rotate(360deg);
   }
 }
+
+/* ------------------------------------------------------ */
+/* 🔥 DARK MODE DROPDOWN FIX — Makes options visible       */
+/* ------------------------------------------------------ */
+
+select {
+  background-color: #1e293b;      /* dark input background */
+  color: #f1f5f9;                 /* light text */
+  border: 1px solid #334155;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+select:focus {
+  outline: none;
+  border-color: #3b82f6;          /* blue glow */
+}
+
+/* Dropdown list */
+select option {
+  background-color: #0f172a;      /* dark dropdown box */
+  color: #f8fafc;                 /* visible text */
+  padding: 8px;
+}
+
+/* hover item */
+select option:hover {
+  background-color: #1e293b;
+  color: #fff;
+}
+
+/* disabled items */
+select option:disabled {
+  color: #64748b !important;      /* muted gray */
+  background-color: #0f172a;
+}
