@@ -283,21 +283,14 @@ function MenteeDetailsPage() {
   }
 
   return (
-    <div className="mdp">
-      <div className="container">
-        <Link to="/dashboard" className="back">
+    <div className="min-h-screen bg-slate-50 py-8 px-4 font-sans text-slate-900">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <Link to="/dashboard" className="text-sky-600 hover:text-sky-700 font-medium hover:underline flex items-center gap-1">
           ← Back to Dashboard
         </Link>
 
         {user?.role === 'hod' && (
-          <div
-            className="section"
-            style={{
-              marginTop: 18,
-              background: 'rgba(239,68,68,.08)',
-              border: '1px solid rgba(239,68,68,.4)'
-            }}
-          >
+          <div className="bg-rose-50 border border-rose-200 rounded-xl p-5 shadow-sm">
             <HodMentorSwitch
               studentId={student.profile._id}
               currentMentorId={student.profile.currentMentor}
@@ -306,69 +299,82 @@ function MenteeDetailsPage() {
           </div>
         )}
 
-        <div className="grid">
-          <div className="card">
-            <div className="card-head" style={{ justifyContent: 'space-between' }}>
-              <h3 className="card-title">Profile</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden col-span-1 md:col-span-2">
+            <div className="bg-slate-100 border-b border-slate-200 px-6 py-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+              <h3 className="text-xl font-bold text-slate-800 m-0">Profile</h3>
               <button
                 onClick={handleDownloadReport}
-                className="form-btn"
-                style={{ background: '#0ea5e9', fontSize: 12 }}
+                className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-sm transition disabled:opacity-50"
                 disabled={isDownloading}
               >
                 {isDownloading ? 'Downloading...' : 'Download Report'}
               </button>
             </div>
-            <div className="card-body">
-              <h2 className="profile-name">{student.profile.name}</h2>
-              <p className="meta">Register No: {student.profile.registerNumber}</p>
-              <p className="meta">VM No: {student.profile.vmNumber}</p>
-              <p className="meta">Department: {student.profile.department}</p>
+            <div className="p-6">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">{student.profile.name}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Register No</p>
+                  <p className="text-lg font-semibold text-slate-800 m-0">{student.profile.registerNumber}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">VM No</p>
+                  <p className="text-lg font-semibold text-slate-800 m-0">{student.profile.vmNumber}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Department</p>
+                  <p className="text-lg font-semibold text-slate-800 m-0">{student.profile.department}</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="section">
-            <div className="card-head" style={{ justifyContent: 'space-between' }}>
-              <h3 className="card-title">
-                Assessment Data <span className="chip">Sheet 1</span>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-slate-100 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 m-0">
+                Assessment Data 
+                <span className="px-2 py-0.5 bg-slate-200 text-slate-700 text-xs font-bold rounded-full">Sheet 1</span>
               </h3>
               {!showAssessmentForm && (
-                <button onClick={handleAddNewClick} className="form-btn" style={{ background: '#10b981' }}>
+                <button onClick={handleAddNewClick} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-md shadow-sm transition">
                   Add New
                 </button>
               )}
             </div>
 
-            <div className="card-body">
+            <div className="p-6">
               {showAssessmentForm ? (
-                <AssessmentForm
-                  studentId={studentId}
-                  assessmentToEdit={editingAssessment}
-                  onAssessmentAdded={handleFormSave}
-                  onCancel={handleFormCancel}
-                />
+                <div className="bg-slate-50 p-4 border border-slate-200 rounded-xl mb-4">
+                  <AssessmentForm
+                    studentId={studentId}
+                    assessmentToEdit={editingAssessment}
+                    onAssessmentAdded={handleFormSave}
+                    onCancel={handleFormCancel}
+                  />
+                </div>
               ) : (
-                student.assessments.length === 0 && <div className="muted">No assessment data found.</div>
+                student.assessments.length === 0 && <div className="text-slate-500 text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">No assessment data found.</div>
               )}
 
               {!showAssessmentForm && student.assessments.length > 0 && (
-                <div className="two-col">
+                <div className="grid grid-cols-1 gap-4">
                   {student.assessments.map(ass => (
-                    <div key={ass._id} className="item">
-                      <strong>{ass.academicYear}</strong>
-                      <div className="muted">Attendance: {ass.attendancePercent}%</div>
-                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                    <div key={ass._id} className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                      <div>
+                        <strong className="text-slate-900 block text-lg mb-1">{ass.academicYear}</strong>
+                        <div className="text-slate-600 font-medium">Attendance: <span className="text-slate-900">{ass.attendancePercent}%</span></div>
+                      </div>
+                      <div className="flex gap-2">
                         <button
                           onClick={() => handleEditClick(ass)}
-                          className="form-btn"
-                          style={{ background: '#f59e0b' }}
+                          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg shadow-sm transition"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDeleteAssessment(ass._id)}
-                          className="form-btn"
-                          style={{ background: '#dc2626' }}
+                          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg shadow-sm transition border-none cursor-pointer"
                         >
                           Delete
                         </button>
@@ -380,63 +386,65 @@ function MenteeDetailsPage() {
             </div>
           </div>
 
-          <div className="section" style={{ gridColumn: '1 / -1' }}>
-            <div className="card-head" style={{ justifyContent: 'space-between' }}>
-              <h3 className="card-title">
-                Intervention Log <span className="chip">Sheet 2</span>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-slate-100 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 m-0">
+                Intervention Log 
+                <span className="px-2 py-0.5 bg-slate-200 text-slate-700 text-xs font-bold rounded-full">Sheet 2</span>
               </h3>
               {!showInterventionForm && (
                 <button
                   onClick={handleAddNewInterventionClick}
-                  className="form-btn"
-                  style={{ background: '#10b981' }}
+                  className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-md shadow-sm transition border-none cursor-pointer"
                 >
                   Add New
                 </button>
               )}
             </div>
 
-            <div className="card-body">
+            <div className="p-6">
               {showInterventionForm ? (
-                <InterventionForm
-                  studentId={studentId}
-                  interventionToEdit={editingIntervention}
-                  onInterventionAdded={handleInterventionFormSave}
-                  onCancel={handleInterventionFormCancel}
-                />
+                <div className="bg-slate-50 p-4 border border-slate-200 rounded-xl mb-4">
+                  <InterventionForm
+                    studentId={studentId}
+                    interventionToEdit={editingIntervention}
+                    onInterventionAdded={handleInterventionFormSave}
+                    onCancel={handleInterventionFormCancel}
+                  />
+                </div>
               ) : (
-                student.interventions.length === 0 && <div className="muted">No intervention data found.</div>
+                student.interventions.length === 0 && <div className="text-slate-500 text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">No intervention data found.</div>
               )}
 
               {!showInterventionForm && student.interventions.length > 0 && (
-                <div className="two-col">
+                <div className="grid grid-cols-1 gap-4">
                   {student.interventions.map(int => (
-                    <div key={int._id} className="item">
-                      <strong>
-                        {int.monthYear} ({int.category})
-                      </strong>
-                      <p className="muted">
-                        <b>Action:</b> {int.actionTaken}
-                      </p>
-                      <p className="muted">
-                        <b>Impact:</b> {int.impact}
-                      </p>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button
-                          onClick={() => handleEditInterventionClick(int)}
-                          className="form-btn"
-                          style={{ background: '#f59e0b' }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteIntervention(int._id)}
-                          className="form-btn"
-                          style={{ background: '#dc2626' }}
-                        >
-                          Delete
-                        </button>
+                    <div key={int._id} className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-3 mb-3">
+                        <strong className="text-slate-900 text-lg">
+                          {int.monthYear} <span className="text-sky-600 text-sm font-semibold ml-1">({int.category})</span>
+                        </strong>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditInterventionClick(int)}
+                            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 border-none cursor-pointer text-white font-medium rounded-md shadow-sm transition"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteIntervention(int._id)}
+                            className="px-3 py-1.5 bg-red-500 hover:bg-red-600 border-none cursor-pointer text-white font-medium rounded-md shadow-sm transition"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
+                      <p className="text-slate-700 mb-2 mt-0">
+                        <span className="font-bold text-slate-900">Action:</span> {int.actionTaken}
+                      </p>
+                      <p className="text-slate-700 m-0">
+                        <span className="font-bold text-slate-900">Impact:</span> {int.impact}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -445,8 +453,12 @@ function MenteeDetailsPage() {
           </div>
         </div>
 
-        <AcademicLogSection studentId={studentId} />
-        <ActivityLogSection studentId={studentId} />
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <AcademicLogSection studentId={studentId} />
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <ActivityLogSection studentId={studentId} />
+        </div>
       </div>
     </div>
   )

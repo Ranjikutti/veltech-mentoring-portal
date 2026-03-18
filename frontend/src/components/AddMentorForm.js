@@ -1,74 +1,91 @@
 import React, { useState } from 'react';
-// import { useAuth } from '../context/AuthContext'; // <-- GONE (not needed)
 import api from 'api';
+import { Form, Input, Button, message, Typography } from 'antd';
+
+const { Title } = Typography;
 
 function AddMentorForm({ onMentorAdded }) {
-  // const { token } = useAuth(); // <-- GONE
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    mtsNumber: '',
-    designation: '',
-    password: ''
-  });
+  const [saving, setSaving] = useState(false);
+  const [form] = Form.useForm();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setMessage('');
+  const onFinish = async (values) => {
+    setSaving(true);
     try {
-      // const config = { ... }; // <-- GONE
-      
-      // Call our new "create-mentor" route
-      // URL is short, 'config' is gone.
-      const response = await api.post('/users/create-mentor', formData);
-      
-      setMessage(`Success! Mentor ${response.data.name} created.`);
-      onMentorAdded(response.data); // Send the new mentor up to the dashboard
-      // Clear the form
-      setFormData({ name: '', email: '', mtsNumber: '', designation: '', password: '' });
+      const response = await api.post('/users/create-mentor', values);
+      message.success(`Success! Mentor ${response.data.name} created.`);
+      onMentorAdded(response.data);
+      form.resetFields();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create mentor.');
+      message.error(err.response?.data?.message || 'Failed to create mentor.');
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form-card" style={{ background: 'rgba(2, 6, 23, .55)', marginTop: '16px' }}>
-      <h4 className="form-title">Add New Mentor</h4>
-      <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        <div className="field">
-          <label className="label">Name</label>
-          <input type="text" name="name" value={formData.name} onChange={handleChange} className="input" required />
+    <div style={{ padding: '0' }}>
+      <Title level={4} style={{ marginBottom: 24, color: '#0f172a' }}>Add New Mentor</Title>
+      
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={onFinish}
+        size="large"
+      >
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '0 16px' }}>
+          <Form.Item 
+            label={<span style={{ fontWeight: 600, color: '#334155' }}>Name</span>} 
+            name="name" 
+            rules={[{ required: true, message: 'Please input the mentor name!' }]}
+          >
+            <Input placeholder="Enter mentor name" style={{ borderRadius: 8 }} />
+          </Form.Item>
+
+          <Form.Item 
+            label={<span style={{ fontWeight: 600, color: '#334155' }}>Email</span>} 
+            name="email" 
+            rules={[
+              { required: true, message: 'Please input the mentor email!' },
+              { type: 'email', message: 'Please enter a valid email!' }
+            ]}
+          >
+            <Input placeholder="Enter mentor email" style={{ borderRadius: 8 }} />
+          </Form.Item>
+
+          <Form.Item 
+            label={<span style={{ fontWeight: 600, color: '#334155' }}>MTS Number (e.g., mts003)</span>} 
+            name="mtsNumber" 
+            rules={[{ required: true, message: 'Please input the MTS number!' }]}
+          >
+            <Input placeholder="e.g. MTS1234" style={{ borderRadius: 8 }} />
+          </Form.Item>
+
+          <Form.Item 
+            label={<span style={{ fontWeight: 600, color: '#334155' }}>Designation</span>} 
+            name="designation" 
+            rules={[{ required: true, message: 'Please input the designation!' }]}
+          >
+            <Input placeholder="e.g. Assistant Professor" style={{ borderRadius: 8 }} />
+          </Form.Item>
+          
+          <div style={{ gridColumn: '1 / -1' }}>
+            <Form.Item 
+              label={<span style={{ fontWeight: 600, color: '#334155' }}>Initial Password</span>} 
+              name="password" 
+              rules={[{ required: true, message: 'Please input the initial password!' }]}
+            >
+              <Input.Password placeholder="Create a password" style={{ borderRadius: 8 }} />
+            </Form.Item>
+          </div>
         </div>
-        <div className="field">
-          <label className="label">Email</label>
-          <input type="email" name="email" value={formData.email} onChange={handleChange} className="input" required />
-        </div>
-        <div className="field">
-          <label className="label">MTS Number (e.g., mts003)</label>
-          <input type="text" name="mtsNumber" value={formData.mtsNumber} onChange={handleChange} className="input" required />
-        </div>
-        <div className="field">
-          <label className="label">Designation</label>
-          <input type="text" name="designation" value={formData.designation} onChange={handleChange} className="input" required />
-        </div>
-        <div className="field" style={{ gridColumn: '1 / -1' }}>
-          <label className="label">Initial Password</label>
-          <input type="password" name="password" value={formData.password} onChange={handleChange} className="input" required />
-        </div>
-      </div>
-      <button type="submit" className="form-btn">Add Mentor</button>
-      <div className="msg-wrap">
-        {error && <p className="msg-err">{error}</p>}
-        {message && <p className="msg-ok">{message}</p>}
-      </div>
-    </form>
+
+        <Form.Item style={{ marginTop: 16, marginBottom: 0 }}>
+          <Button type="primary" htmlType="submit" loading={saving} style={{ background: '#0ea5e9', borderColor: '#0ea5e9', borderRadius: 8, fontWeight: 600 }}>
+            {saving ? 'Adding...' : 'Add Mentor'}
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
   );
 }
 

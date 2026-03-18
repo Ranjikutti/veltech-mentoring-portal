@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from 'api';
 import { Link } from 'react-router-dom';
+import { Row, Col, Button, Space, Typography, Card } from 'antd';
 
 import AddMentorForm from './AddMentorForm';
 import AddStudentForm from './AddStudentForm';
+
+const { Title, Text } = Typography;
 
 function HodDashboard() {
   const { user } = useAuth();
@@ -46,126 +49,110 @@ function HodDashboard() {
 
   return (
     <div>
-      <h3 className="card-title" style={{ margin: 0, fontSize: '18px' }}>HOD Dashboard</h3>
-      <p className="muted" style={{ margin: '4px 0 16px 0' }}>Your Department: {user.department}</p>
+      <Title level={4} style={{ marginBottom: 4, color: '#0f172a' }}>HOD Dashboard</Title>
+      <Text type="secondary" style={{ display: 'block', paddingBottom: 16, marginBottom: 20, borderBottom: '1px solid #e2e8f0' }}>
+        Your Department: {user.department}
+      </Text>
       
-      <div
-        style={{
-          display: 'flex',
-          gap: '10px',
-          borderBottom: '1px solid rgba(255, 255, 255, .1)',
-          paddingBottom: '16px',
-          flexWrap: 'wrap'
-        }}
-      >
-        <button
-          onClick={getMentors}
-          className="form-btn"
-          style={{ margin: 0, background: '#0ea5e9' }}
+      <Space wrap style={{ paddingBottom: 24 }}>
+        <Button 
+          type="primary" 
+          onClick={getMentors} 
+          style={{ background: '#0ea5e9', borderColor: '#0ea5e9', borderRadius: 8, height: 40, fontWeight: 500 }}
         >
           View All Mentors
-        </button>
-
-        <button
-          onClick={() => setShowAddMentor(!showAddMentor)}
-          className="form-btn"
-          style={{ margin: 0, background: '#10b981' }}
+        </Button>
+        <Button 
+          type="primary" 
+          onClick={() => {
+            setShowAddMentor(!showAddMentor);
+            if (!showAddMentor) setShowAddStudent(false);
+          }} 
+          style={{ background: '#10b981', borderColor: '#10b981', borderRadius: 8, height: 40, fontWeight: 500 }}
         >
           {showAddMentor ? 'Close Form' : 'Add New Mentor'}
-        </button>
-
-        <button
-          onClick={() => setShowAddStudent(!showAddStudent)}
-          className="form-btn"
-          style={{ margin: 0, background: '#8b5cf6' }}
+        </Button>
+        <Button 
+          type="primary" 
+          onClick={() => {
+            setShowAddStudent(!showAddStudent);
+            if (!showAddStudent) setShowAddMentor(false);
+          }} 
+          style={{ background: '#8b5cf6', borderColor: '#8b5cf6', borderRadius: 8, height: 40, fontWeight: 500 }}
         >
           {showAddStudent ? 'Close Form' : 'Add New Student'}
-        </button>
-
-        <Link
-          to="/hods"
-          className="form-btn"
-          style={{ margin: 0, background: '#38bdf8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          Manage HOD Profiles
+        </Button>
+        <Link to="/hods">
+          <Button 
+            type="primary" 
+            style={{ background: '#3b82f6', borderColor: '#3b82f6', borderRadius: 8, height: 40, fontWeight: 500 }}
+          >
+            Manage HOD Profiles
+          </Button>
         </Link>
-      </div>
+      </Space>
       
       {showAddMentor && (
-        <AddMentorForm
-          onMentorAdded={(newMentor) => {
-            setMentors([...mentors, newMentor]);
-            setShowAddMentor(false);
-          }}
-        />
+        <Card style={{ marginBottom: 24, background: '#f8fafc', borderRadius: 12, borderColor: '#e2e8f0' }}>
+          <AddMentorForm
+            onMentorAdded={(newMentor) => {
+              setMentors([...mentors, newMentor]);
+              setShowAddMentor(false);
+            }}
+          />
+        </Card>
       )}
       
       {showAddStudent && (
-        <AddStudentForm
-          onStudentAdded={() => {
-            setShowAddStudent(false);
-          }}
-        />
+        <Card style={{ marginBottom: 24, background: '#f8fafc', borderRadius: 12, borderColor: '#e2e8f0' }}>
+          <AddStudentForm
+            onStudentAdded={() => {
+              setShowAddStudent(false);
+            }}
+          />
+        </Card>
       )}
       
-      {loading && <p>Loading mentors...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {loading && <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>Loading mentors...</Text>}
+      {error && <Text type="danger" style={{ display: 'block', background: '#fef2f2', padding: 12, borderRadius: 8, border: '1px solid #fecaca', marginBottom: 16 }}>{error}</Text>}
       
-      <div className="mentor-list" style={{ marginTop: '16px' }}>
+      <Row gutter={[16, 16]}>
         {mentors.map(mentor => (
-          <div
-            key={mentor._id}
-            className="card"
-            style={{
-              background: 'rgba(2, 6, 23, .45)',
-              padding: '14px',
-              margin: '10px 0',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}
-          >
-            <Link
-              to={`/mentor/${mentor._id}`}
-              style={{ textDecoration: 'none', color: 'white', flexGrow: 1 }}
+          <Col xs={24} sm={12} md={12} lg={8} xl={6} key={mentor._id}>
+            <Card 
+              hoverable
+              bodyStyle={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '16px' }}
+              style={{ borderRadius: 12, height: '100%', borderColor: '#e2e8f0', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}
             >
-              <div>
-                <h4 style={{ margin: 0, fontSize: '16px', color: '#fff' }}>{mentor.name}</h4>
-                <p
-                  className="muted"
-                  style={{ margin: '4px 0 0 0', fontSize: '12px' }}
-                >
-                  {mentor.designation} ({mentor.mtsNumber})
-                </p>
-              </div>
-            </Link>
-            
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Link
-                to={`/mentor/${mentor._id}/edit`}
-                className="form-btn"
-                style={{
-                  background: '#f59e0b',
-                  margin: 0,
-                  padding: '8px 12px',
-                  fontSize: '12px',
-                  textDecoration: 'none'
-                }}
-              >
-                Edit
+              <Link to={`/mentor/${mentor._id}`} style={{ textDecoration: 'none', color: 'inherit', marginBottom: 16, flexGrow: 1, display: 'block' }}>
+                <Title level={5} style={{ margin: 0, color: '#0f172a' }} ellipsis={{ tooltip: mentor.name }}>
+                  {mentor.name}
+                </Title>
+                <Text type="secondary" style={{ display: 'block', marginTop: 4 }}>
+                  {mentor.designation} <br/>({mentor.mtsNumber})
+                </Text>
               </Link>
+              
+              <Space style={{ marginTop: 'auto', display: 'flex', gap: '8px' }}>
+                <Link to={`/mentor/${mentor._id}/edit`}>
+                  <Button type="default" style={{ borderColor: '#f59e0b', color: '#f59e0b', fontWeight: 500, borderRadius: 6 }}>
+                    Edit
+                  </Button>
+                </Link>
 
-              <button
-                onClick={() => handleDeleteMentor(mentor._id, mentor.name)}
-                className="form-btn"
-                style={{ background: '#dc2626', margin: 0, padding: '8px 12px', fontSize: '12px' }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
+                <Button 
+                  danger 
+                  type="primary" 
+                  onClick={() => handleDeleteMentor(mentor._id, mentor.name)}
+                  style={{ borderRadius: 6, fontWeight: 500 }}
+                >
+                  Delete
+                </Button>
+              </Space>
+            </Card>
+          </Col>
         ))}
-      </div>
+      </Row>
     </div>
   );
 }

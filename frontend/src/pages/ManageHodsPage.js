@@ -1,22 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import api from 'api';
 import { Link } from 'react-router-dom';
+import { Card, Form, Input, Button, Row, Col, Typography, message, Popconfirm, Spin, Empty } from 'antd';
+import { ArrowLeftOutlined, SyncOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
 
 function ManageHodsPage() {
   const [hods, setHods] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    mtsNumber: '',
-    department: '',
-    designation: ''
-  });
+  const [form] = Form.useForm();
 
   const sortHods = (list) => {
     const arr = Array.isArray(list) ? [...list] : [];
@@ -30,13 +25,11 @@ function ManageHodsPage() {
 
   const loadHods = async () => {
     try {
-      setError('');
       setLoading(true);
       const res = await api.get('/users/hods');
       setHods(sortHods(res.data || []));
     } catch (e) {
-      const msg = e?.response?.data?.message || 'Failed to load HODs';
-      setError(msg);
+      message.error(e?.response?.data?.message || 'Failed to load HODs');
     } finally {
       setLoading(false);
     }
@@ -46,58 +39,36 @@ function ManageHodsPage() {
     loadHods();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setError('');
-    setSuccess('');
-  };
-
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
+  const onFinish = async (values) => {
     setSaving(true);
     try {
       const body = {
-        name: form.name.trim(),
-        email: form.email.trim(),
-        password: form.password,
-        mtsNumber: form.mtsNumber.trim(),
-        department: form.department.trim(),
-        designation: form.designation.trim()
+        name: values.name.trim(),
+        email: values.email.trim(),
+        password: values.password,
+        mtsNumber: values.mtsNumber.trim(),
+        department: values.department.trim(),
+        designation: values.designation.trim()
       };
       const res = await api.post('/users/hods', body);
-      setSuccess('HOD created successfully');
-      setForm({
-        name: '',
-        email: '',
-        password: '',
-        mtsNumber: '',
-        department: '',
-        designation: ''
-      });
+      message.success('HOD created successfully');
+      form.resetFields();
       setHods((prev) => sortHods([...prev, res.data]));
     } catch (e) {
-      const msg = e?.response?.data?.message || 'Failed to create HOD';
-      setError(msg);
+      message.error(e?.response?.data?.message || 'Failed to create HOD');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this HOD?')) return;
-    setError('');
-    setSuccess('');
     setDeletingId(id);
     try {
       await api.delete(`/users/hods/${id}`);
       setHods((prev) => prev.filter((h) => h._id !== id));
-      setSuccess('HOD deleted successfully');
+      message.success('HOD deleted successfully');
     } catch (e) {
-      const msg = e?.response?.data?.message || 'Failed to delete HOD';
-      setError(msg);
+      message.error(e?.response?.data?.message || 'Failed to delete HOD');
     } finally {
       setDeletingId(null);
     }
@@ -105,218 +76,118 @@ function ManageHodsPage() {
 
   if (loading && hods.length === 0) {
     return (
-      <div className="mlp loading">
-        <div className="spin" />
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}>
+        <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <div className="mlp">
-      <div className="container" style={{ maxWidth: '1000px' }}>
-        <Link to="/dashboard" className="back">
-          ← Back to Dashboard
+    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
+          <ArrowLeftOutlined /> Back to Dashboard
         </Link>
 
-        <div className="panel" style={{ marginTop: '16px' }}>
-          <div className="panel-body">
-            <h4 className="form-title" style={{ marginBottom: 18 }}>
-              Manage HODs
-            </h4>
+        <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+          <Title level={3} style={{ marginBottom: 32, color: '#0f172a' }}>Manage HODs</Title>
 
-            <div
-              style={{
-                display: 'grid',
-                gap: 20,
-                gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-                alignItems: 'flex-start'
-              }}
-            >
-              <form
-                onSubmit={handleCreate}
-                className="form-card"
-                style={{ margin: 0 }}
+          <Row gutter={[32, 32]}>
+            <Col xs={24} lg={12}>
+              <Card title={<span style={{ fontWeight: 700, fontSize: 16 }}>Create New HOD</span>} bordered style={{ borderRadius: 12, background: '#f8fafc' }} headStyle={{ borderBottom: '1px solid #e2e8f0' }}>
+                <Form
+                  form={form}
+                  layout="vertical"
+                  onFinish={onFinish}
+                >
+                  <Row gutter={16}>
+                    <Col xs={24} sm={12}>
+                      <Form.Item label={<span style={{ fontWeight: 600 }}>Name</span>} name="name" rules={[{ required: true, message: 'Required' }]}>
+                        <Input style={{ borderRadius: 8 }} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      <Form.Item label={<span style={{ fontWeight: 600 }}>Email</span>} name="email" rules={[{ required: true, message: 'Required' }, { type: 'email', message: 'Invalid' }]}>
+                        <Input type="email" style={{ borderRadius: 8 }} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      <Form.Item label={<span style={{ fontWeight: 600 }}>Password</span>} name="password" rules={[{ required: true, message: 'Required' }]}>
+                        <Input.Password style={{ borderRadius: 8 }} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      <Form.Item label={<span style={{ fontWeight: 600 }}>MTS Number</span>} name="mtsNumber" rules={[{ required: true, message: 'Required' }]}>
+                        <Input style={{ borderRadius: 8 }} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      <Form.Item label={<span style={{ fontWeight: 600 }}>Department</span>} name="department" rules={[{ required: true, message: 'Required' }]}>
+                        <Input placeholder="CSE, ECE, IT..." style={{ borderRadius: 8 }} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      <Form.Item label={<span style={{ fontWeight: 600 }}>Designation</span>} name="designation" rules={[{ required: true, message: 'Required' }]}>
+                        <Input placeholder="HOD, Professor" style={{ borderRadius: 8 }} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                  <Button type="primary" htmlType="submit" loading={saving} style={{ background: '#0ea5e9', borderColor: '#0ea5e9', fontWeight: 600, borderRadius: 8 }}>
+                    {saving ? 'Creating...' : 'Create HOD'}
+                  </Button>
+                </Form>
+              </Card>
+            </Col>
+
+            <Col xs={24} lg={12}>
+              <Card 
+                title={
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 700, fontSize: 16 }}>Existing HODs ({hods.length})</span>
+                    <Button type="default" size="small" icon={<SyncOutlined />} onClick={loadHods} loading={loading} style={{ borderRadius: 6 }}>
+                      Refresh
+                    </Button>
+                  </div>
+                } 
+                bordered 
+                style={{ borderRadius: 12, background: '#f8fafc' }}
+                headStyle={{ borderBottom: '1px solid #e2e8f0' }}
               >
-                <h4 className="form-title">Create New HOD</h4>
-                <div
-                  className="form-grid"
-                  style={{ gridTemplateColumns: '1fr 1fr' }}
-                >
-                  <div className="field">
-                    <label className="label">Name</label>
-                    <input
-                      name="name"
-                      value={form.name}
-                      onChange={handleChange}
-                      className="input"
-                      required
-                    />
-                  </div>
-                  <div className="field">
-                    <label className="label">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      className="input"
-                      required
-                    />
-                  </div>
-                  <div className="field">
-                    <label className="label">Password</label>
-                    <input
-                      type="password"
-                      name="password"
-                      value={form.password}
-                      onChange={handleChange}
-                      className="input"
-                      required
-                    />
-                  </div>
-                  <div className="field">
-                    <label className="label">MTS Number</label>
-                    <input
-                      name="mtsNumber"
-                      value={form.mtsNumber}
-                      onChange={handleChange}
-                      className="input"
-                      required
-                    />
-                  </div>
-                  <div className="field">
-                    <label className="label">Department</label>
-                    <input
-                      name="department"
-                      value={form.department}
-                      onChange={handleChange}
-                      placeholder="CSE, ECE, IT, MECH"
-                      className="input"
-                      required
-                    />
-                  </div>
-                  <div className="field">
-                    <label className="label">Designation</label>
-                    <input
-                      name="designation"
-                      value={form.designation}
-                      onChange={handleChange}
-                      placeholder="HOD, Professor"
-                      className="input"
-                      required
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="form-btn"
-                  style={{ marginTop: 18, minWidth: 150 }}
-                >
-                  {saving ? 'Creating...' : 'Create HOD'}
-                </button>
-                <div className="msg-wrap">
-                  {error && <p className="msg-err">{error}</p>}
-                  {success && <p className="msg-ok">{success}</p>}
-                </div>
-              </form>
-
-              <div className="form-card" style={{ margin: 0 }}>
-                <h4 className="form-title">Existing HODs</h4>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: 10
-                  }}
-                >
-                  <p className="muted" style={{ margin: 0, fontSize: 12 }}>
-                    Total: {hods.length}
-                  </p>
-                  <button
-                    onClick={loadHods}
-                    disabled={loading}
-                    className="form-btn"
-                    style={{
-                      height: 32,
-                      paddingInline: 12,
-                      marginTop: 0,
-                      fontSize: 12,
-                      background: '#020617'
-                    }}
-                  >
-                    {loading ? 'Refreshing...' : 'Refresh'}
-                  </button>
-                </div>
-
-                {hods.length === 0 && !loading && (
-                  <div className="empty">No HODs found yet.</div>
-                )}
-
-                <div style={{ marginTop: 10, display: 'grid', gap: 10 }}>
-                  {hods.map((hod) => (
-                    <div
-                      key={hod._id}
-                      style={{
-                        borderRadius: 12,
-                        border: '1px solid rgba(148, 163, 184, .45)',
-                        background: 'rgba(15,23,42,.85)',
-                        padding: '10px 12px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: 10
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 600 }}>
-                          {hod.name}{' '}
-                          <span style={{ fontSize: 11, color: '#38bdf8' }}>
-                            ({hod.department})
-                          </span>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: '#cbd5e1',
-                            marginTop: 2
-                          }}
-                        >
-                          {hod.email}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: '#94a3b8',
-                            marginTop: 2
-                          }}
-                        >
-                          {hod.mtsNumber} • {hod.designation}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleDelete(hod._id)}
-                        disabled={deletingId === hod._id}
-                        className="form-btn"
-                        style={{
-                          background: '#ef4444',
-                          height: 32,
-                          paddingInline: 14,
-                          marginTop: 0,
-                          fontSize: 12
-                        }}
+                {hods.length === 0 && !loading ? (
+                  <Empty description="No HODs found yet." />
+                ) : (
+                  <div style={{ display: 'flex', gap: 12, flexDirection: 'column' }}>
+                    {hods.map((hod) => (
+                      <Card.Grid 
+                        key={hod._id} 
+                        style={{ width: '100%', borderRadius: 8, padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}
+                        hoverable={false}
                       >
-                        {deletingId === hod._id ? 'Deleting...' : 'Delete'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
+                        <div>
+                          <div style={{ fontWeight: 'bold', color: '#0f172a' }}>
+                            {hod.name} <Text type="secondary" style={{ color: '#0ea5e9', fontSize: 12, fontWeight: 700 }}>({hod.department})</Text>
+                          </div>
+                          <Text type="secondary" style={{ fontSize: 13, display: 'block', marginTop: 4 }}>{hod.email}</Text>
+                          <Text type="secondary" style={{ fontSize: 12, marginTop: 2 }}>{hod.mtsNumber} • {hod.designation}</Text>
+                        </div>
+                        <Popconfirm
+                          title="Delete HOD"
+                          description="Are you sure you want to delete this HOD?"
+                          onConfirm={() => handleDelete(hod._id)}
+                          okButtonProps={{ danger: true }}
+                        >
+                          <Button danger type="primary" size="small" loading={deletingId === hod._id} style={{ borderRadius: 6, fontWeight: 600 }}>
+                            Delete
+                          </Button>
+                        </Popconfirm>
+                      </Card.Grid>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </Col>
+          </Row>
+        </Card>
       </div>
     </div>
   );

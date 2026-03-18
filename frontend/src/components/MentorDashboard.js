@@ -1,64 +1,65 @@
 import React, { useState, useEffect } from 'react';
-// import { useAuth } from '../context/AuthContext'; // <-- GONE
 import api from 'api';
-import { Link } from 'react-router-dom'; // Make sure Link is imported
+import { Link } from 'react-router-dom';
+import { Row, Col, Card, Typography, Button } from 'antd';
+const { Title, Text } = Typography;
 
 function MentorDashboard() {
   const [mentees, setMentees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  // const { token } = useAuth(); // <-- GONE
 
   useEffect(() => {
     const fetchMentees = async () => {
       try {
-        // const config = { ... }; // <-- GONE
-
-        // Talk to our backend API!
-        // URL is short, 'config' is gone
         const response = await api.get('/students/my-mentees');
-        
-        setMentees(response.data); // Save the list of mentees
+        setMentees(response.data);
         setLoading(false);
-
       } catch (err) {
         setError('Failed to fetch mentees.');
         setLoading(false);
       }
     };
-
     fetchMentees();
-  }, []); // Dependency array is now empty
+  }, []);
 
-  if (loading) return <div>Loading your mentees...</div>;
-  if (error) return <div style={{ color: 'red' }}>{error}</div>;
+  if (loading) return <div className="text-slate-500 animate-pulse mt-4">Loading your mentees...</div>;
+  if (error) return <div className="text-red-500 bg-red-50 p-3 rounded-lg mt-4">{error}</div>;
 
   return (
-    <div>
-      {/* --- ADD THIS LINK/BUTTON --- */}
-      <div style={{ marginBottom: '20px' }}>
-        <Link to="/performance" style={{ textDecoration: 'none', padding: '10px 15px', backgroundColor: '#0ea5e9', color: 'white', borderRadius: '8px' }}>
-          View Performance Report
+    <div style={{ marginTop: 24 }}>
+      <div style={{ marginBottom: 24 }}>
+        <Link to="/performance">
+          <Button type="primary" size="large" style={{ background: '#0ea5e9', borderColor: '#0ea5e9' }}>
+            View Performance Report
+          </Button>
         </Link>
       </div>
-      {/* --- END OF ADDITION --- */}
 
-      <h3>Your Mentees</h3>
+      <Title level={4} style={{ color: '#0f172a', marginBottom: 16 }}>Your Mentees</Title>
+      
       {mentees.length === 0 ? (
-        <p>You have no mentees assigned yet.</p>
+        <Card>
+          <Text type="secondary">You have no mentees assigned yet.</Text>
+        </Card>
       ) : (
-        <ul>
-          {/* --- THIS IS THE UPDATED PART --- */}
+        <Row gutter={[16, 16]}>
           {mentees.map(mentee => (
-            <li key={mentee._id}>
-              {/* Each mentee is now a link to their details page */}
-              <Link to={`/mentee/${mentee._id}`}>
-                {mentee.name} ({mentee.registerNumber})
+            <Col xs={24} sm={12} md={8} lg={6} xl={6} key={mentee._id}>
+              <Link to={`/mentee/${mentee._id}`} style={{ textDecoration: 'none' }}>
+                <Card 
+                  hoverable 
+                  size="small" 
+                  style={{ borderRadius: 12, height: '100%', borderColor: '#e2e8f0' }}
+                  bodyStyle={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+                >
+                  <Title level={5} style={{ margin: 0, color: '#0f172a' }}>{mentee.name}</Title>
+                  <Text type="secondary" style={{ marginTop: 4 }}>Reg: {mentee.registerNumber}</Text>
+                </Card>
               </Link>
-            </li>
+            </Col>
           ))}
-          {/* --- END OF UPDATE --- */}
-        </ul>
+        </Row>
       )}
     </div>
   );

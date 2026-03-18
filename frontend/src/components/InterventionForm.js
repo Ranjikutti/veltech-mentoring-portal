@@ -1,130 +1,87 @@
 import React, { useState, useEffect } from 'react';
 import api from 'api';
+import { Form, Input, Button, Select, Typography, message } from 'antd';
 
-// --- NEW PROPS ADDED: onCancel, interventionToEdit ---
+const { Title } = Typography;
+const { TextArea } = Input;
+
 function InterventionForm({ studentId, onInterventionAdded, onCancel, interventionToEdit = null }) {
-  
-  // --- UPDATED: State now pre-fills if editing ---
-  const [formData, setFormData] = useState({
-    monthYear: interventionToEdit ? interventionToEdit.monthYear : 'Nov 2025',
-    category: interventionToEdit ? interventionToEdit.category : 'Slow learner',
-    actionTaken: interventionToEdit ? interventionToEdit.actionTaken : '',
-    impact: interventionToEdit ? interventionToEdit.impact : ''
-  });
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [form] = Form.useForm();
+  const [saving, setSaving] = useState(false);
 
-  // --- NEW: useEffect to fill form when prop changes ---
   useEffect(() => {
     if (interventionToEdit) {
-      setFormData({
-        monthYear: interventionToEdit.monthYear,
-        category: interventionToEdit.category,
-        actionTaken: interventionToEdit.actionTaken,
-        impact: interventionToEdit.impact
-      });
+      form.setFieldsValue(interventionToEdit);
     } else {
-      // Reset form if we are creating a new one
-      setFormData({
+      form.setFieldsValue({
         monthYear: 'Nov 2025',
         category: 'Slow learner',
         actionTaken: '',
         impact: ''
       });
     }
-  }, [interventionToEdit]);
+  }, [interventionToEdit, form]);
 
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  // --- UPDATED: handleSubmit now handles both POST and PUT ---
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setMessage('');
-
-    if (!formData.actionTaken || !formData.impact) {
-      setError('Please fill out both Action Taken and Impact.');
-      return;
-    }
-
+  const onFinish = async (values) => {
+    setSaving(true);
     try {
-      const body = { ...formData, studentId };
-
+      const body = { ...values, studentId };
       if (interventionToEdit) {
-        // --- EDIT MODE ---
-        // Call our new 'PUT /api/interventions/:id' route!
         await api.put(`/interventions/${interventionToEdit._id}`, body);
-        setMessage('Success! Intervention log updated.');
+        message.success('Success! Intervention log updated.');
       } else {
-        // --- CREATE MODE ---
-        // Call our 'POST /api/interventions' route!
         await api.post('/interventions', body);
-        setMessage('Success! Intervention log saved.');
+        message.success('Success! Intervention log saved.');
       }
-
-      // Tell the parent page to refresh its data
       onInterventionAdded();
-      
-      // Clear the form (only if we are not in edit mode)
       if (!interventionToEdit) {
-        setFormData({
-          ...formData,
-          actionTaken: '',
-          impact: ''
-        });
+        form.resetFields();
       }
-
     } catch (err) {
-      setError('Failed to save intervention.');
+      message.error('Failed to save intervention.');
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    // Your styling is kept, but I've added the new buttons
-    <form onSubmit={handleSubmit} style={{ border: '2px solid green', padding: '10px', marginTop: '15px' }}>
-      
-      {/* --- NEW: Dynamic Title --- */}
-      <h4>{interventionToEdit ? 'Edit Intervention' : 'Add Intervention (Sheet 2)'}</h4>
-      
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {message && <p style={{ color: 'green' }}>{message}</p>}
+    <div style={{ padding: 0 }}>
+      <Title level={4} style={{ marginBottom: 24, color: '#0f172a' }}>
+        {interventionToEdit ? 'Edit Intervention' : 'Add Intervention (Sheet 2)'}
+      </Title>
 
-      <div>
-        <label>Month/Year: </label>
-        <input type="text" name="monthYear" value={formData.monthYear} onChange={handleChange} />
-      </div>
-      <div>
-        <label>Category: </label>
-        <select name="category" value={formData.category} onChange={handleChange}>
-          <option value="Slow learner">Slow learner</option>
-          <option value="Fast learner">Fast learner</option>
-        </select>
-      </div>
-      <div>
-        <label>Action Taken: </label>
-        <textarea name="actionTaken" value={formData.actionTaken} onChange={handleChange} />
-      </div>
-      <div>
-        <label>Impact: </label>
-        <textarea name="impact" value={formData.impact} onChange={handleChange} />
-      </div>
+      <Form form={form} layout="vertical" onFinish={onFinish}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+          <Form.Item label="Month/Year" name="monthYear" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item label="Category" name="category" rules={[{ required: true }]}>
+            <Select>
+              <Select.Option value="Slow learner">Slow learner</Select.Option>
+              <Select.Option value="Fast learner">Fast learner</Select.Option>
+            </Select>
+          </Form.Item>
+        </div>
+        
+        <Form.Item label="Action Taken" name="actionTaken" rules={[{ required: true }]}>
+          <TextArea rows={3} />
+        </Form.Item>
+        <Form.Item label="Impact" name="impact" rules={[{ required: true }]}>
+          <TextArea rows={3} />
+        </Form.Item>
 
-      {/* --- NEW: Button Group --- */}
-      <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-        <button type="submit" className="form-btn" style={{ margin: 0 }}>
-          {interventionToEdit ? 'Update Log' : 'Save Intervention'}
-        </button>
-        <button type="button" onClick={onCancel} className="form-btn" style={{ margin: 0, background: '#64748b' }}>
-          Cancel
-        </button>
-      </div>
-    </form>
+        <Form.Item style={{ marginTop: 24, marginBottom: 0 }}>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <Button type="primary" htmlType="submit" loading={saving} style={{ background: '#10b981', borderColor: '#10b981', borderRadius: 8, fontWeight: 600 }}>
+              {interventionToEdit ? 'Update Log' : 'Save Intervention'}
+            </Button>
+            <Button type="default" onClick={onCancel} style={{ borderRadius: 8, fontWeight: 500 }}>
+              Cancel
+            </Button>
+          </div>
+        </Form.Item>
+      </Form>
+    </div>
   );
 }
 
