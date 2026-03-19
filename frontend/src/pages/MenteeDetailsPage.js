@@ -1,148 +1,162 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import api from 'api'
-import AssessmentForm from '../components/AssessmentForm'
-import InterventionForm from '../components/InterventionForm'
-import HodMentorSwitch from '../components/HodMentorSwitch'
-import AcademicLogSection from '../components/AcademicLogSection'
-import ActivityLogSection from '../components/ActivityLogSection'
-import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
-import { toast } from 'react-toastify'
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import api from 'api';
+import AssessmentForm from '../components/AssessmentForm';
+import InterventionForm from '../components/InterventionForm';
+import HodMentorSwitch from '../components/HodMentorSwitch';
+import AcademicLogSection from '../components/AcademicLogSection';
+import ActivityLogSection from '../components/ActivityLogSection';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { toast } from 'react-toastify';
+import { Card, Typography, Button, Spin, Alert, Row, Col, Space, Tag, Modal } from 'antd';
+import { ArrowLeftOutlined, DownloadOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
 
 function MenteeDetailsPage() {
-  const [student, setStudent] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const { studentId } = useParams()
-  const { user } = useAuth()
+  const [student, setStudent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const { studentId } = useParams();
+  const { user } = useAuth();
 
-  const [editingAssessment, setEditingAssessment] = useState(null)
-  const [showAssessmentForm, setShowAssessmentForm] = useState(false)
+  const [editingAssessment, setEditingAssessment] = useState(null);
+  const [showAssessmentForm, setShowAssessmentForm] = useState(false);
 
-  const [editingIntervention, setEditingIntervention] = useState(null)
-  const [showInterventionForm, setShowInterventionForm] = useState(false)
+  const [editingIntervention, setEditingIntervention] = useState(null);
+  const [showInterventionForm, setShowInterventionForm] = useState(false);
 
-  const [isDownloading, setIsDownloading] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const fetchStudentDetails = useCallback(async () => {
-    if (!student) setLoading(true)
+    if (!student) setLoading(true);
     try {
-      const res = await api.get(`/students/${studentId}/details`)
-      setStudent(res.data)
-      setLoading(false)
+      const res = await api.get(`/students/${studentId}/details`);
+      setStudent(res.data);
+      setLoading(false);
     } catch (err) {
-      setError('Failed to fetch student details.')
-      setLoading(false)
+      setError('Failed to fetch student details.');
+      setLoading(false);
     }
-  }, [studentId, student])
+  }, [studentId, student]);
 
   useEffect(() => {
-    if (!student) fetchStudentDetails()
-  }, [fetchStudentDetails, student])
+    if (!student) fetchStudentDetails();
+  }, [fetchStudentDetails, student]);
 
-  const handleDeleteAssessment = async assessmentId => {
-    const ok = window.confirm('Are you sure you want to delete this assessment record?')
-    if (!ok) return
-    try {
-      await api.delete(`/assessments/${assessmentId}`)
-      toast.success('Assessment deleted successfully')
-      fetchStudentDetails()
-    } catch (err) {
-      const msg = err?.response?.data?.message || 'Failed to delete assessment.'
-      toast.error(msg)
-    }
-  }
+  const handleDeleteAssessment = async (assessmentId) => {
+    Modal.confirm({
+      title: 'Are you sure you want to delete this assessment record?',
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          await api.delete(`/assessments/${assessmentId}`);
+          toast.success('Assessment deleted successfully');
+          fetchStudentDetails();
+        } catch (err) {
+          const msg = err?.response?.data?.message || 'Failed to delete assessment.';
+          toast.error(msg);
+        }
+      }
+    });
+  };
 
   const handleAddNewClick = () => {
-    setEditingAssessment(null)
-    setShowAssessmentForm(true)
-  }
+    setEditingAssessment(null);
+    setShowAssessmentForm(true);
+  };
 
-  const handleEditClick = assessment => {
-    setEditingAssessment(assessment)
-    setShowAssessmentForm(true)
-  }
+  const handleEditClick = (assessment) => {
+    setEditingAssessment(assessment);
+    setShowAssessmentForm(true);
+  };
 
   const handleFormSave = () => {
-    setShowAssessmentForm(false)
-    fetchStudentDetails()
-    toast.success('Assessment saved successfully')
-  }
+    setShowAssessmentForm(false);
+    fetchStudentDetails();
+  };
 
-  const handleFormCancel = () => setShowAssessmentForm(false)
+  const handleFormCancel = () => setShowAssessmentForm(false);
 
-  const handleDeleteIntervention = async interventionId => {
-    const ok = window.confirm('Are you sure you want to delete this intervention log?')
-    if (!ok) return
-    try {
-      await api.delete(`/interventions/${interventionId}`)
-      toast.success('Intervention deleted successfully')
-      fetchStudentDetails()
-    } catch (err) {
-      const msg = err?.response?.data?.message || 'Failed to delete intervention.'
-      toast.error(msg)
-    }
-  }
+  const handleDeleteIntervention = async (interventionId) => {
+    Modal.confirm({
+      title: 'Are you sure you want to delete this intervention log?',
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          await api.delete(`/interventions/${interventionId}`);
+          toast.success('Intervention deleted successfully');
+          fetchStudentDetails();
+        } catch (err) {
+          const msg = err?.response?.data?.message || 'Failed to delete intervention.';
+          toast.error(msg);
+        }
+      }
+    });
+  };
 
   const handleAddNewInterventionClick = () => {
-    setEditingIntervention(null)
-    setShowInterventionForm(true)
-  }
+    setEditingIntervention(null);
+    setShowInterventionForm(true);
+  };
 
-  const handleEditInterventionClick = data => {
-    setEditingIntervention(data)
-    setShowInterventionForm(true)
-  }
+  const handleEditInterventionClick = (data) => {
+    setEditingIntervention(data);
+    setShowInterventionForm(true);
+  };
 
   const handleInterventionFormSave = () => {
-    setShowInterventionForm(false)
-    fetchStudentDetails()
-    toast.success('Intervention saved successfully')
-  }
+    setShowInterventionForm(false);
+    fetchStudentDetails();
+  };
 
-  const handleInterventionFormCancel = () => setShowInterventionForm(false)
+  const handleInterventionFormCancel = () => setShowInterventionForm(false);
 
   const handleDownloadReport = async () => {
-    setIsDownloading(true)
+    setIsDownloading(true);
     try {
-      const response = await api.get(`/assessments/report/${studentId}`)
-      const { studentProfile, mentorName, kpiTotals, finalScores } = response.data
-      const doc = new jsPDF()
+      const response = await api.get(`/assessments/report/${studentId}`);
+      const { studentProfile, mentorName, kpiTotals, finalScores } = response.data;
+      const doc = new jsPDF();
 
-      doc.setFontSize(16)
-      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
       doc.text(
         'Vel Tech Multi Tech Dr.Rangarajan Dr.Sakunthala Engineering College',
         doc.internal.pageSize.getWidth() / 2,
         15,
         { align: 'center' }
-      )
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'normal')
+      );
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
       doc.text(
         '(Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai)',
         doc.internal.pageSize.getWidth() / 2,
         20,
         { align: 'center' }
-      )
-      doc.setFontSize(12)
-      doc.setFont('helvetica', 'bold')
+      );
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
       doc.text(
         'STUDENT MENTORING ASSESSMENT SHEET',
         doc.internal.pageSize.getWidth() / 2,
         30,
         { align: 'center' }
-      )
+      );
 
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'normal')
-      doc.text(`Department: ${studentProfile.department}`, 14, 40)
-      doc.text(`Mentor Name: ${mentorName}`, 14, 45)
-      doc.text(`Mentee Name: ${studentProfile.name}`, 14, 50)
-      doc.text(`Mentee VM No: ${studentProfile.vmNumber}`, 14, 55)
-      doc.text(`Batch: ${studentProfile.batch}`, 100, 55)
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Department: ${studentProfile.department}`, 14, 40);
+      doc.text(`Mentor Name: ${mentorName}`, 14, 45);
+      doc.text(`Mentee Name: ${studentProfile.name}`, 14, 50);
+      doc.text(`Mentee VM No: ${studentProfile.vmNumber}`, 14, 55);
+      doc.text(`Batch: ${studentProfile.batch}`, 100, 55);
 
       const tableBody = [
         ['1', 'CGPA', studentProfile.latestCgpa, '', '', finalScores.cgpaScore],
@@ -153,25 +167,19 @@ function MenteeDetailsPage() {
           '5',
           'Conference',
           `${kpiTotals.conference.participated} (P) / ${kpiTotals.conference.presented} (Pr) / ${kpiTotals.conference.prizesWon} (W)`,
-          '',
-          '',
-          ''
+          '', '', ''
         ],
         [
           '6',
           'Symposium',
           `${kpiTotals.symposium.participated} (P) / ${kpiTotals.symposium.presented} (Pr) / ${kpiTotals.symposium.prizesWon} (W)`,
-          '',
-          '',
-          ''
+          '', '', ''
         ],
         [
           '7',
           'Professional Body activities',
           `${kpiTotals.profBodyActivities.participated} (P) / ${kpiTotals.profBodyActivities.presented} (Pr) / ${kpiTotals.profBodyActivities.prizesWon} (W)`,
-          '',
-          '',
-          ''
+          '', '', ''
         ],
         ['', '', '', '', 'Score', finalScores.coCurricularScore],
         ['8', 'Talks/Lectures', kpiTotals.talksLectures.participated, '', '', ''],
@@ -179,51 +187,41 @@ function MenteeDetailsPage() {
           '9',
           'Project Expo',
           `${kpiTotals.projectExpo.presented} (Pr) / ${kpiTotals.projectExpo.prizesWon} (W)`,
-          '',
-          '',
-          ''
+          '', '', ''
         ],
         [
           '10',
           'NPTEL/SWAYAM',
           `${kpiTotals.nptelSwayam.completed} (C) / ${kpiTotals.nptelSwayam.miniprojects} (MP)`,
-          '',
-          '',
-          ''
+          '', '', ''
         ],
         [
           '11',
           'Certification Courses',
           `${kpiTotals.otherCertifications.completed} (C) / ${kpiTotals.otherCertifications.miniprojects} (MP)`,
-          '',
-          '',
-          ''
+          '', '', ''
         ],
         ['', '', '', '', 'Score', finalScores.certificationScore],
         [
           '12',
           'Culturals',
           `${kpiTotals.culturals.participated} (P) / ${kpiTotals.culturals.prizesWon} (W)`,
-          '',
-          '',
-          ''
+          '', '', ''
         ],
         [
           '13',
           'Sports',
           `${kpiTotals.sports.participated} (P) / ${kpiTotals.sports.prizesWon} (W)`,
-          '',
-          '',
-          ''
+          '', '', ''
         ],
         ['14', 'NCC', `${kpiTotals.ncc.participated} (P) / ${kpiTotals.ncc.prizesWon} (W)`, '', '', ''],
         ['15', 'NSS', `${kpiTotals.nss.participated} (P) / ${kpiTotals.nss.prizesWon} (W)`, '', '', ''],
         ['', '', '', '', 'Score', finalScores.extraCurricularScore]
-      ]
+      ];
 
       autoTable(doc, {
         startY: 60,
-        head: [['Sl. No', 'KPI', 'Earned / No. of events attended over the years', 'Remarks', 'Average Score', 'Score']],
+        head: [['Sl. No', 'KPI', 'Earned / No. of events attended', 'Remarks', 'Average Score', 'Score']],
         body: tableBody,
         theme: 'grid',
         styles: { fontSize: 8, cellPadding: 1.5, halign: 'center' },
@@ -234,234 +232,228 @@ function MenteeDetailsPage() {
         },
         didParseCell: data => {
           if (data.cell.raw === 'Score') {
-            data.cell.colSpan = 2
-            data.cell.halign = 'right'
-            data.cell.fontStyle = 'bold'
+            data.cell.colSpan = 2;
+            data.cell.halign = 'right';
+            data.cell.fontStyle = 'bold';
           }
         }
-      })
+      });
 
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'bold')
-      const finalY = doc.lastAutoTable.finalY
-      doc.text('Overall Score (out of 50)', 140, finalY + 10)
-      doc.text(finalScores.totalScore.toString(), 190, finalY + 10, { align: 'center' })
-      doc.setFont('helvetica', 'normal')
-      doc.text('Mentor', 30, finalY + 30)
-      doc.text('Head of the Department', 160, finalY + 30)
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      const finalY = doc.lastAutoTable.finalY || 200;
+      doc.text('Overall Score (out of 50)', 140, finalY + 10);
+      doc.text(finalScores.totalScore.toString(), 190, finalY + 10, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.text('Mentor', 30, finalY + 30);
+      doc.text('Head of the Department', 160, finalY + 30);
 
-      doc.save(`Mentoring_Report_${studentProfile.name}.pdf`)
-      toast.success('Report downloaded')
+      doc.save(`Mentoring_Report_${studentProfile.name}.pdf`);
+      toast.success('Report downloaded');
     } catch (err) {
-      const msg = err?.response?.data?.message || 'Failed to download report.'
-      toast.error(msg)
+      const msg = err?.response?.data?.message || 'Failed to download report.';
+      toast.error(msg);
     } finally {
-      setIsDownloading(false)
+      setIsDownloading(false);
     }
-  }
+  };
 
   if (loading && !student) {
     return (
-      <div className="mdp-wrap loading">
-        <div className="spin" />
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}>
+        <Spin size="large" />
       </div>
-    )
+    );
   }
+
   if (error) {
     return (
-      <div className="mdp-wrap error">
-        <div className="err">{error}</div>
+      <div style={{ padding: 24, maxWidth: 600, margin: '0 auto', background: '#f8fafc', minHeight: '100vh' }}>
+        <Alert message="Error" description={error} type="error" showIcon />
       </div>
-    )
+    );
   }
+
   if (!student || !student.profile) {
     return (
-      <div className="mdp-wrap empty">
-        <div className="box">No student data found.</div>
+      <div style={{ padding: 24, maxWidth: 600, margin: '0 auto', background: '#f8fafc', minHeight: '100vh' }}>
+        <Card bordered={false} style={{ textAlign: 'center' }}>
+          <Text type="secondary">No student data found.</Text>
+        </Card>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 font-sans text-slate-900">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <Link to="/dashboard" className="text-sky-600 hover:text-sky-700 font-medium hover:underline flex items-center gap-1">
-          ← Back to Dashboard
+    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
+          <ArrowLeftOutlined /> Back to Dashboard
         </Link>
-
-        {user?.role === 'hod' && (
-          <div className="bg-rose-50 border border-rose-200 rounded-xl p-5 shadow-sm">
-            <HodMentorSwitch
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          
+          {user?.role === 'hod' && (
+             <HodMentorSwitch
               studentId={student.profile._id}
               currentMentorId={student.profile.currentMentor}
               onMentorSwitched={fetchStudentDetails}
             />
-          </div>
-        )}
+          )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden col-span-1 md:col-span-2">
-            <div className="bg-slate-100 border-b border-slate-200 px-6 py-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-              <h3 className="text-xl font-bold text-slate-800 m-0">Profile</h3>
-              <button
-                onClick={handleDownloadReport}
-                className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-sm transition disabled:opacity-50"
-                disabled={isDownloading}
+          <Card
+            bordered={false}
+            title={<Title level={4} style={{ margin: 0 }}>Profile</Title>}
+            style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}
+            extra={
+              <Button 
+                type="primary" 
+                icon={<DownloadOutlined />} 
+                onClick={handleDownloadReport} 
+                loading={isDownloading}
+                style={{ background: '#0ea5e9', borderColor: '#0ea5e9' }}
               >
-                {isDownloading ? 'Downloading...' : 'Download Report'}
-              </button>
-            </div>
-            <div className="p-6">
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">{student.profile.name}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Register No</p>
-                  <p className="text-lg font-semibold text-slate-800 m-0">{student.profile.registerNumber}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">VM No</p>
-                  <p className="text-lg font-semibold text-slate-800 m-0">{student.profile.vmNumber}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Department</p>
-                  <p className="text-lg font-semibold text-slate-800 m-0">{student.profile.department}</p>
-                </div>
+                Download Report
+              </Button>
+            }
+          >
+            <Title level={2} style={{ marginTop: 0, marginBottom: 16, color: '#0f172a' }}>{student.profile.name}</Title>
+            <Row gutter={[24, 24]}>
+              <Col xs={24} sm={8}>
+                <Text type="secondary" style={{ display: 'block', textTransform: 'uppercase', fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>Register No</Text>
+                <Text strong style={{ fontSize: 18 }}>{student.profile.registerNumber}</Text>
+              </Col>
+              <Col xs={24} sm={8}>
+                <Text type="secondary" style={{ display: 'block', textTransform: 'uppercase', fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>VM No</Text>
+                <Text strong style={{ fontSize: 18 }}>{student.profile.vmNumber}</Text>
+              </Col>
+              <Col xs={24} sm={8}>
+                <Text type="secondary" style={{ display: 'block', textTransform: 'uppercase', fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>Department</Text>
+                <Text strong style={{ fontSize: 18 }}>{student.profile.department}</Text>
+              </Col>
+            </Row>
+          </Card>
+
+          <Card
+            bordered={false}
+            title={
+              <Space>
+                <Title level={4} style={{ margin: 0 }}>Assessment Data</Title>
+                <Tag color="cyan">Sheet 1</Tag>
+              </Space>
+            }
+            extra={
+              !showAssessmentForm && (
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleAddNewClick} style={{ background: '#10b981', borderColor: '#10b981' }}>
+                  Add New
+                </Button>
+              )
+            }
+            style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}
+          >
+            {showAssessmentForm ? (
+              <div style={{ background: '#f8fafc', padding: 24, borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 16 }}>
+                <AssessmentForm
+                  studentId={studentId}
+                  assessmentToEdit={editingAssessment}
+                  onAssessmentAdded={handleFormSave}
+                  onCancel={handleFormCancel}
+                />
               </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="bg-slate-100 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 m-0">
-                Assessment Data 
-                <span className="px-2 py-0.5 bg-slate-200 text-slate-700 text-xs font-bold rounded-full">Sheet 1</span>
-              </h3>
-              {!showAssessmentForm && (
-                <button onClick={handleAddNewClick} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-md shadow-sm transition">
-                  Add New
-                </button>
-              )}
-            </div>
-
-            <div className="p-6">
-              {showAssessmentForm ? (
-                <div className="bg-slate-50 p-4 border border-slate-200 rounded-xl mb-4">
-                  <AssessmentForm
-                    studentId={studentId}
-                    assessmentToEdit={editingAssessment}
-                    onAssessmentAdded={handleFormSave}
-                    onCancel={handleFormCancel}
-                  />
+            ) : (
+              student.assessments.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '32px 0', border: '2px dashed #e2e8f0', borderRadius: 12 }}>
+                  <Text type="secondary">No assessment data found.</Text>
                 </div>
-              ) : (
-                student.assessments.length === 0 && <div className="text-slate-500 text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">No assessment data found.</div>
-              )}
+              )
+            )}
 
-              {!showAssessmentForm && student.assessments.length > 0 && (
-                <div className="grid grid-cols-1 gap-4">
-                  {student.assessments.map(ass => (
-                    <div key={ass._id} className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            {!showAssessmentForm && student.assessments.length > 0 && (
+              <Space direction="vertical" style={{ width: '100%' }}>
+                {student.assessments.map(ass => (
+                  <Card key={ass._id} size="small" style={{ background: '#f8fafc', borderRadius: 8, borderColor: '#e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
                       <div>
-                        <strong className="text-slate-900 block text-lg mb-1">{ass.academicYear}</strong>
-                        <div className="text-slate-600 font-medium">Attendance: <span className="text-slate-900">{ass.attendancePercent}%</span></div>
+                        <Title level={5} style={{ margin: 0 }}>{ass.academicYear}</Title>
+                        <Text type="secondary">Attendance: <Text strong>{ass.attendancePercent}%</Text></Text>
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditClick(ass)}
-                          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg shadow-sm transition"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAssessment(ass._id)}
-                          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg shadow-sm transition border-none cursor-pointer"
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      <Space>
+                        <Button type="default" icon={<EditOutlined />} onClick={() => handleEditClick(ass)} style={{ color: '#d97706', borderColor: '#d97706' }}>Edit</Button>
+                        <Button type="primary" danger icon={<DeleteOutlined />} onClick={() => handleDeleteAssessment(ass._id)}>Delete</Button>
+                      </Space>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+                  </Card>
+                ))}
+              </Space>
+            )}
+          </Card>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="bg-slate-100 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 m-0">
-                Intervention Log 
-                <span className="px-2 py-0.5 bg-slate-200 text-slate-700 text-xs font-bold rounded-full">Sheet 2</span>
-              </h3>
-              {!showInterventionForm && (
-                <button
-                  onClick={handleAddNewInterventionClick}
-                  className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-md shadow-sm transition border-none cursor-pointer"
-                >
+          <Card
+            bordered={false}
+            title={
+              <Space>
+                <Title level={4} style={{ margin: 0 }}>Intervention Log</Title>
+                <Tag color="purple">Sheet 2</Tag>
+              </Space>
+            }
+            extra={
+              !showInterventionForm && (
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleAddNewInterventionClick} style={{ background: '#10b981', borderColor: '#10b981' }}>
                   Add New
-                </button>
-              )}
-            </div>
-
-            <div className="p-6">
-              {showInterventionForm ? (
-                <div className="bg-slate-50 p-4 border border-slate-200 rounded-xl mb-4">
-                  <InterventionForm
-                    studentId={studentId}
-                    interventionToEdit={editingIntervention}
-                    onInterventionAdded={handleInterventionFormSave}
-                    onCancel={handleInterventionFormCancel}
-                  />
+                </Button>
+              )
+            }
+            style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}
+          >
+            {showInterventionForm ? (
+              <div style={{ background: '#f8fafc', padding: 24, borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 16 }}>
+                <InterventionForm
+                  studentId={studentId}
+                  interventionToEdit={editingIntervention}
+                  onInterventionAdded={handleInterventionFormSave}
+                  onCancel={handleInterventionFormCancel}
+                />
+              </div>
+            ) : (
+              student.interventions.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '32px 0', border: '2px dashed #e2e8f0', borderRadius: 12 }}>
+                  <Text type="secondary">No intervention data found.</Text>
                 </div>
-              ) : (
-                student.interventions.length === 0 && <div className="text-slate-500 text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">No intervention data found.</div>
-              )}
+              )
+            )}
 
-              {!showInterventionForm && student.interventions.length > 0 && (
-                <div className="grid grid-cols-1 gap-4">
-                  {student.interventions.map(int => (
-                    <div key={int._id} className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-3 mb-3">
-                        <strong className="text-slate-900 text-lg">
-                          {int.monthYear} <span className="text-sky-600 text-sm font-semibold ml-1">({int.category})</span>
-                        </strong>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditInterventionClick(int)}
-                            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 border-none cursor-pointer text-white font-medium rounded-md shadow-sm transition"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteIntervention(int._id)}
-                            className="px-3 py-1.5 bg-red-500 hover:bg-red-600 border-none cursor-pointer text-white font-medium rounded-md shadow-sm transition"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-slate-700 mb-2 mt-0">
-                        <span className="font-bold text-slate-900">Action:</span> {int.actionTaken}
-                      </p>
-                      <p className="text-slate-700 m-0">
-                        <span className="font-bold text-slate-900">Impact:</span> {int.impact}
-                      </p>
+            {!showInterventionForm && student.interventions.length > 0 && (
+              <Space direction="vertical" style={{ width: '100%' }}>
+                {student.interventions.map(int => (
+                  <Card key={int._id} size="small" style={{ background: '#f8fafc', borderRadius: 8, borderColor: '#e2e8f0' }}>
+                    <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: 12, marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                      <Title level={5} style={{ margin: 0 }}>
+                        {int.monthYear} <Text type="secondary" style={{ fontSize: 13, color: '#0ea5e9' }}>({int.category})</Text>
+                      </Title>
+                      <Space>
+                        <Button type="default" size="small" icon={<EditOutlined />} onClick={() => handleEditInterventionClick(int)} style={{ color: '#d97706', borderColor: '#d97706' }}>Edit</Button>
+                        <Button type="primary" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDeleteIntervention(int._id)}>Delete</Button>
+                      </Space>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+                    <Text style={{ display: 'block', marginBottom: 4 }}><Text strong>Action:</Text> {int.actionTaken}</Text>
+                    <Text style={{ display: 'block' }}><Text strong>Impact:</Text> {int.impact}</Text>
+                  </Card>
+                ))}
+              </Space>
+            )}
+          </Card>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <AcademicLogSection studentId={studentId} />
-        </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <ActivityLogSection studentId={studentId} />
-        </div>
+          <div style={{ marginBottom: 24 }}>
+             <AcademicLogSection studentId={studentId} />
+          </div>
+
+          <div>
+             <ActivityLogSection studentId={studentId} />
+          </div>
+
+        </Space>
       </div>
     </div>
-  )
+  );
 }
 
-export default MenteeDetailsPage
+export default MenteeDetailsPage;

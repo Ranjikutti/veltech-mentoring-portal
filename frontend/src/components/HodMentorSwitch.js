@@ -1,90 +1,107 @@
 import React, { useState, useEffect } from 'react';
-// import { useAuth } from '../context/AuthContext'; // <-- GONE (not needed)
+import { Card, Typography, Select, Button, message, Alert } from 'antd';
+import { SwapOutlined } from '@ant-design/icons';
 import api from 'api';
 
+const { Title, Text } = Typography;
+const { Option } = Select;
+
 function HodMentorSwitch({ studentId, currentMentorId, onMentorSwitched }) {
-  // const { token } = useAuth(); // <-- GONE
   const [mentors, setMentors] = useState([]);
   const [selectedMentor, setSelectedMentor] = useState(currentMentorId);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
-  // 1. Fetch all mentors in the HOD's department
   useEffect(() => {
     const fetchMentors = async () => {
       try {
-        // const config = { ... }; // <-- GONE
-        
-        // URL is short, 'config' is gone
         const response = await api.get('/users/mentors');
         setMentors(response.data);
-        setLoading(false);
       } catch (err) {
         setError('Failed to load mentors list.');
+      } finally {
         setLoading(false);
       }
     };
     fetchMentors();
-  }, []); // Dependency array is now empty
+  }, []);
 
-  // 2. Handle the "Re-assign" button click
   const handleSwitch = async () => {
     if (selectedMentor === currentMentorId) {
-      setError('This student is already assigned to this mentor.');
+      message.warning('This student is already assigned to this mentor.');
       return;
     }
     setError('');
-    setMessage('');
+    setSubmitting(true);
 
     try {
-      // const config = { ... }; // <-- GGONE
       const body = { newMentorId: selectedMentor };
-      
-      // URL is short, 'config' is gone
       await api.put(`/students/${studentId}/assign-mentor`, body);
       
-      setMessage('Mentor successfully reassigned!');
+      message.success('Mentor successfully reassigned!');
       if (onMentorSwitched) {
         onMentorSwitched();
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to reassign mentor.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (loading) return <p>Loading mentor list...</p>;
-
   return (
-    <div className="form-card" style={{ background: 'rgba(239, 68, 68, .08)', border: '1px solid rgba(239, 68, 68, .4)' }}>
-      {/* Styles are now in index.css */}
-      <h4 className="form-title" style={{ color: '#f87171' }}>HOD Admin: Re-assign Mentor</h4>
-      <div className="field">
-        <label className="label">Assign to New Mentor:</label>
-        <select 
-          value={selectedMentor}
-          onChange={(e) => setSelectedMentor(e.target.value)}
-          className="input select"
+    <Card 
+      bordered={false} 
+      style={{ 
+        background: '#fff1f0', 
+        borderColor: '#ffa39e', 
+        borderWidth: 1, 
+        borderStyle: 'solid',
+        borderRadius: 12,
+        marginBottom: 24
+      }}
+      bodyStyle={{ padding: 20 }}
+    >
+      <Title level={4} style={{ color: '#cf1322', marginTop: 0, marginBottom: 16 }}>
+        <SwapOutlined style={{ marginRight: 8 }} />
+        HOD Admin: Re-assign Mentor
+      </Title>
+      
+      {error && <Alert message={error} type="error" showIcon style={{ marginBottom: 16 }} />}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div>
+          <Text strong style={{ display: 'block', marginBottom: 8 }}>Assign to New Mentor:</Text>
+          <Select
+            size="large"
+            value={selectedMentor}
+            onChange={setSelectedMentor}
+            style={{ width: '100%' }}
+            loading={loading}
+            showSearch
+            optionFilterProp="children"
+          >
+            {mentors.map(mentor => (
+              <Option key={mentor._id} value={mentor._id}>
+                {mentor.name} ({mentor.mtsNumber})
+              </Option>
+            ))}
+          </Select>
+        </div>
+        
+        <Button 
+          type="primary" 
+          danger 
+          size="large" 
+          onClick={handleSwitch} 
+          loading={submitting}
+          style={{ width: 'fit-content' }}
         >
-          {mentors.map(mentor => (
-            <option key={mentor._id} value={mentor._id}>
-              {mentor.name} ({mentor.mtsNumber})
-            </option>
-          ))}
-        </select>
+          Re-Assign Mentor
+        </Button>
       </div>
-      <button 
-        onClick={handleSwitch} 
-        className="form-btn" 
-        style={{ background: '#dc2626', boxShadow: '0 8px 25px rgba(220, 38, 38, .25)' }}
-      >
-        Re-Assign Mentor
-      </button>
-      <div className="msg-wrap">
-        {error && <p className="msg-err">{error}</p>}
-        {message && <p className="msg-ok">{message}</p>}
-      </div>
-    </div>
+    </Card>
   );
 }
 

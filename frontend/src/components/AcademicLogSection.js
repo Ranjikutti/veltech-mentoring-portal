@@ -1,308 +1,200 @@
-import React, { useEffect, useState } from 'react'
-import api from 'api'
+import React, { useEffect, useState } from 'react';
+import api from 'api';
+import { Card, Typography, Button, Table, Form, Input, Select, DatePicker, Space, Popconfirm, message, Row, Col, Alert } from 'antd';
+import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
+
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
 
 function AcademicLogSection({ studentId }) {
-  const [logs, setLogs] = useState([])
-  const [semesterFilter, setSemesterFilter] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [form, setForm] = useState({
-    semester: '',
-    date: '',
-    type: 'AP',
-    problemIdentification: '',
-    problemDetails: '',
-    remedialAction: '',
-    improvementProgress: ''
-  })
+  const [logs, setLogs] = useState([]);
+  const [semesterFilter, setSemesterFilter] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [form] = Form.useForm();
 
   const loadLogs = async () => {
     try {
-      setLoading(true)
-      setError('')
-      const params = {}
-      if (semesterFilter) params.semester = semesterFilter
-      const res = await api.get(`/academic-logs/${studentId}`, { params })
-      setLogs(res.data || [])
+      setLoading(true);
+      setError('');
+      const params = {};
+      if (semesterFilter) params.semester = semesterFilter;
+      const res = await api.get(`/academic-logs/${studentId}`, { params });
+      setLogs(res.data || []);
     } catch (e) {
-      const msg = e?.response?.data?.message || 'Failed to load academic logs'
-      setError(msg)
+      const msg = e?.response?.data?.message || 'Failed to load academic logs';
+      setError(msg);
+      message.error(msg);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    if (studentId) loadLogs()
-  }, [studentId, semesterFilter])
+    if (studentId) loadLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentId, semesterFilter]);
 
-  const handleChange = e => {
-    const { name, value } = e.target
-    setForm(prev => ({ ...prev, [name]: value }))
-    setError('')
-    setSuccess('')
-  }
-
-  const handleSubmit = async e => {
-    e.preventDefault()
-    setSaving(true)
-    setError('')
-    setSuccess('')
+  const handleSubmit = async (values) => {
+    setSaving(true);
+    setError('');
     try {
       const body = {
         studentId,
-        semester: form.semester.trim(),
-        date: form.date,
-        type: form.type,
-        problemIdentification: form.problemIdentification.trim(),
-        problemDetails: form.problemDetails.trim(),
-        remedialAction: form.remedialAction.trim(),
-        improvementProgress: form.improvementProgress.trim()
-      }
-      const res = await api.post('/academic-logs', body)
-      setSuccess('Academic log added successfully')
-      setForm({
-        semester: '',
-        date: '',
-        type: 'AP',
-        problemIdentification: '',
-        problemDetails: '',
-        remedialAction: '',
-        improvementProgress: ''
-      })
-      setLogs(prev => [...prev, res.data])
+        semester: values.semester.trim(),
+        date: values.date.format('YYYY-MM-DD'),
+        type: values.type,
+        problemIdentification: values.problemIdentification.trim(),
+        problemDetails: values.problemDetails?.trim() || '',
+        remedialAction: values.remedialAction?.trim() || '',
+        improvementProgress: values.improvementProgress?.trim() || ''
+      };
+      const res = await api.post('/academic-logs', body);
+      message.success('Academic log added successfully');
+      form.resetFields();
+      setLogs(prev => [...prev, res.data]);
     } catch (e) {
-      const msg = e?.response?.data?.message || 'Failed to add academic log'
-      setError(msg)
+      const msg = e?.response?.data?.message || 'Failed to add academic log';
+      setError(msg);
+      message.error(msg);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
-  const handleDelete = async id => {
-    if (!window.confirm('Delete this academic log?')) return
-    setError('')
-    setSuccess('')
+  const handleDelete = async (id) => {
     try {
-      await api.delete(`/academic-logs/${id}`)
-      setLogs(prev => prev.filter(log => log._id !== id))
-      setSuccess('Academic log deleted')
+      await api.delete(`/academic-logs/${id}`);
+      setLogs(prev => prev.filter(log => log._id !== id));
+      message.success('Academic log deleted');
     } catch (e) {
-      const msg = e?.response?.data?.message || 'Failed to delete log'
-      setError(msg)
+      const msg = e?.response?.data?.message || 'Failed to delete log';
+      message.error(msg);
     }
-  }
+  };
+
+  const columns = [
+    { title: 'Sem', dataIndex: 'semester', key: 'semester', width: 80 },
+    { title: 'Date', dataIndex: 'date', key: 'date', render: text => text ? dayjs(text).format('DD/MM/YYYY') : '-', width: 100 },
+    { title: 'Type', dataIndex: 'type', key: 'type', width: 80, render: text => <Text strong color={text === 'AP' ? 'blue' : 'purple'}>{text}</Text> },
+    { title: 'Problem', dataIndex: 'problemIdentification', key: 'problemIdentification' },
+    { title: 'Remedial Action', dataIndex: 'remedialAction', key: 'remedialAction' },
+    { title: 'Progress', dataIndex: 'improvementProgress', key: 'improvementProgress' },
+    { title: 'By', dataIndex: ['mentorId', 'name'], key: 'mentorId', render: text => text || '-' },
+    {
+      title: 'Action',
+      key: 'action',
+      width: 80,
+      render: (_, record) => (
+        <Popconfirm title="Delete this academic log?" onConfirm={() => handleDelete(record._id)} okText="Yes" cancelText="No">
+          <Button type="primary" danger icon={<DeleteOutlined />} size="small" />
+        </Popconfirm>
+      )
+    }
+  ];
 
   return (
-    <div className="section" style={{ marginTop: 24 }}>
-      <div
-        className="card-head"
-        style={{ justifyContent: 'space-between', alignItems: 'center' }}
-      >
+    <Card 
+      bordered={false} 
+      title={<Title level={4} style={{ margin: 0 }}>Academic / Personal Problems Log</Title>}
+      style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}
+    >
+      <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>Record AP/PP issues, actions taken and progress for each semester.</Text>
+
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end', marginBottom: 24, flexWrap: 'wrap' }}>
         <div>
-          <h3 className="card-title">Academic / Personal Problems Log</h3>
-          <p className="muted" style={{ marginTop: 4, fontSize: 13 }}>
-            Record AP/PP issues, actions taken and progress for each semester.
-          </p>
+          <Text strong style={{ display: 'block', marginBottom: 8 }}>Filter by Semester</Text>
+          <Input.Search
+            placeholder="e.g., Sem 1, 1, I"
+            allowClear
+            onSearch={setSemesterFilter}
+            style={{ width: 200 }}
+            enterButton={<ReloadOutlined />}
+            loading={loading}
+          />
         </div>
       </div>
 
-      <div className="card-body">
-        <div
-          style={{
-            display: 'flex',
-            gap: 12,
-            alignItems: 'flex-end',
-            marginBottom: 16,
-            flexWrap: 'wrap'
-          }}
+      <Card size="small" style={{ background: '#f8fafc', borderRadius: 8, borderColor: '#e2e8f0', marginBottom: 24 }}>
+        <Title level={5} style={{ marginBottom: 16, color: '#0f172a' }}>Add Entry</Title>
+        
+        {error && <Alert message={error} type="error" showIcon style={{ marginBottom: 16 }} />}
+
+        <Form 
+          form={form} 
+          layout="vertical" 
+          onFinish={handleSubmit}
+          initialValues={{ type: 'AP' }}
         >
-          <div style={{ minWidth: 220 }}>
-            <label className="label" style={{ fontSize: 12 }}>
-              Filter by Semester
-            </label>
-            <input
-              className="input"
-              placeholder="e.g., Sem 1, 1, I"
-              value={semesterFilter}
-              onChange={e => setSemesterFilter(e.target.value)}
-            />
-          </div>
-          <button
-            className="form-btn"
-            type="button"
-            onClick={loadLogs}
-            disabled={loading}
-            style={{ padding: '8px 18px', fontSize: 12, marginBottom: 2 }}
-          >
-            {loading ? 'Refreshing...' : 'Refresh'}
-          </button>
-        </div>
+          <Row gutter={16}>
+            <Col xs={24} sm={8}>
+              <Form.Item label="Semester" name="semester" rules={[{ required: true }]}>
+                <Input placeholder="Sem 1 / 1 / I" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Form.Item label="Date" name="date" rules={[{ required: true }]}>
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Form.Item label="Type" name="type" rules={[{ required: true }]}>
+                <Select>
+                  <Option value="AP">Academic Problem (AP)</Option>
+                  <Option value="PP">Personal Problem (PP)</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
-        <form
-          onSubmit={handleSubmit}
-          className="form-card"
-          style={{ background: 'rgba(15,23,42,0.7)', marginBottom: 18 }}
-        >
-          <h4 className="form-title">Add Entry</h4>
+          <Row gutter={16}>
+             <Col xs={24} sm={12}>
+              <Form.Item label="Problem Identification" name="problemIdentification" rules={[{ required: true }]}>
+                <TextArea rows={2} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Problem Details" name="problemDetails">
+                <TextArea rows={2} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Remedial Action" name="remedialAction">
+                <TextArea rows={2} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Improvement / Progress" name="improvementProgress">
+                <TextArea rows={2} />
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-            <div className="field">
-              <label className="label">Semester</label>
-              <input
-                name="semester"
-                value={form.semester}
-                onChange={handleChange}
-                className="input"
-                placeholder="Sem 1 / 1 / I"
-                required
-              />
-            </div>
-            <div className="field">
-              <label className="label">Date</label>
-              <input
-                type="date"
-                name="date"
-                value={form.date}
-                onChange={handleChange}
-                className="input"
-                required
-              />
-            </div>
-            <div className="field">
-              <label className="label">Type</label>
-              <select
-                name="type"
-                value={form.type}
-                onChange={handleChange}
-                className="select"
-              >
-                <option value="AP">Academic Problem (AP)</option>
-                <option value="PP">Personal Problem (PP)</option>
-              </select>
-            </div>
-          </div>
+          <Form.Item style={{ marginBottom: 0 }}>
+            <Button type="primary" htmlType="submit" loading={saving} style={{ background: '#0ea5e9', borderColor: '#0ea5e9' }}>
+              Add Log
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
 
-          <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-            <div className="field">
-              <label className="label">Problem Identification</label>
-              <textarea
-                name="problemIdentification"
-                value={form.problemIdentification}
-                onChange={handleChange}
-                className="input"
-                rows={2}
-                required
-              />
-            </div>
-            <div className="field">
-              <label className="label">Problem Details</label>
-              <textarea
-                name="problemDetails"
-                value={form.problemDetails}
-                onChange={handleChange}
-                className="input"
-                rows={2}
-              />
-            </div>
-            <div className="field">
-              <label className="label">Remedial Action</label>
-              <textarea
-                name="remedialAction"
-                value={form.remedialAction}
-                onChange={handleChange}
-                className="input"
-                rows={2}
-              />
-            </div>
-            <div className="field">
-              <label className="label">Improvement / Progress</label>
-              <textarea
-                name="improvementProgress"
-                value={form.improvementProgress}
-                onChange={handleChange}
-                className="input"
-                rows={2}
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="form-btn"
-            disabled={saving}
-            style={{ marginTop: 12 }}
-          >
-            {saving ? 'Saving...' : 'Add Log'}
-          </button>
-
-          <div className="msg-wrap" style={{ marginTop: 8 }}>
-            {error && <p className="msg-err">{error}</p>}
-            {success && <p className="msg-ok">{success}</p>}
-          </div>
-        </form>
-
-        <div
-          className="form-card"
-          style={{ background: 'rgba(15,23,42,0.7)', marginBottom: 4 }}
-        >
-          <h4 className="form-title">Logged Entries</h4>
-          {logs.length === 0 && !loading && (
-            <p className="muted" style={{ fontSize: 13 }}>
-              No entries yet for this student.
-            </p>
-          )}
-          {logs.length > 0 && (
-            <div className="table-wrap" style={{ marginTop: 8, overflowX: 'auto' }}>
-              <table className="table text-sm" style={{ width: '100%', fontSize: 12 }}>
-                <thead>
-                  <tr>
-                    <th>Sem</th>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Problem</th>
-                    <th>Remedial Action</th>
-                    <th>Progress</th>
-                    <th>By</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map(log => (
-                    <tr key={log._id}>
-                      <td>{log.semester}</td>
-                      <td>{log.date ? new Date(log.date).toLocaleDateString() : ''}</td>
-                      <td>{log.type}</td>
-                      <td>{log.problemIdentification}</td>
-                      <td>{log.remedialAction}</td>
-                      <td>{log.improvementProgress}</td>
-                      <td>{log.mentorId?.name || '-'}</td>
-                      <td>
-                        <button
-                          type="button"
-                          className="form-btn"
-                          onClick={() => handleDelete(log._id)}
-                          style={{
-                            background: '#dc2626',
-                            padding: '4px 10px',
-                            fontSize: 11
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
+      <Title level={5} style={{ marginBottom: 16, color: '#0f172a' }}>Logged Entries</Title>
+      <Table 
+        columns={columns} 
+        dataSource={logs} 
+        rowKey="_id" 
+        loading={loading}
+        pagination={false}
+        scroll={{ x: 800 }}
+        size="middle"
+        locale={{ emptyText: 'No entries yet for this student.' }}
+        style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}
+      />
+    </Card>
+  );
 }
 
-export default AcademicLogSection
+export default AcademicLogSection;
