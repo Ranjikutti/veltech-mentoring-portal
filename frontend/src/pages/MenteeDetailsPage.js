@@ -305,15 +305,22 @@ function MenteeDetailsPage() {
             title={<Title level={4} style={{ margin: 0 }}>Profile</Title>}
             style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}
             extra={
-              <Button 
-                type="primary" 
-                icon={<DownloadOutlined />} 
-                onClick={handleDownloadReport} 
-                loading={isDownloading}
-                style={{ background: '#0ea5e9', borderColor: '#0ea5e9' }}
-              >
-                Download Report
-              </Button>
+              <Space wrap>
+                <Link to={`/mentee/${student.profile._id}/edit`}>
+                  <Button type="default" icon={<EditOutlined />} style={{ color: '#d97706', borderColor: '#d97706' }}>
+                    Edit Profile
+                  </Button>
+                </Link>
+                <Button 
+                  type="primary" 
+                  icon={<DownloadOutlined />} 
+                  onClick={handleDownloadReport} 
+                  loading={isDownloading}
+                  style={{ background: '#0ea5e9', borderColor: '#0ea5e9' }}
+                >
+                  Download Report
+                </Button>
+              </Space>
             }
           >
             <Title level={2} style={{ marginTop: 0, marginBottom: 16, color: '#0f172a' }}>{student.profile.name}</Title>

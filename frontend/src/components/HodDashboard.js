@@ -54,43 +54,55 @@ function HodDashboard() {
         Your Department: {user.department}
       </Text>
       
-      <Space wrap style={{ paddingBottom: 24 }}>
-        <Button 
-          type="primary" 
-          onClick={getMentors} 
-          style={{ background: '#0ea5e9', borderColor: '#0ea5e9', borderRadius: 8, height: 40, fontWeight: 500 }}
-        >
-          View All Mentors
-        </Button>
-        <Button 
-          type="primary" 
-          onClick={() => {
-            setShowAddMentor(!showAddMentor);
-            if (!showAddMentor) setShowAddStudent(false);
-          }} 
-          style={{ background: '#10b981', borderColor: '#10b981', borderRadius: 8, height: 40, fontWeight: 500 }}
-        >
-          {showAddMentor ? 'Close Form' : 'Add New Mentor'}
-        </Button>
-        <Button 
-          type="primary" 
-          onClick={() => {
-            setShowAddStudent(!showAddStudent);
-            if (!showAddStudent) setShowAddMentor(false);
-          }} 
-          style={{ background: '#8b5cf6', borderColor: '#8b5cf6', borderRadius: 8, height: 40, fontWeight: 500 }}
-        >
-          {showAddStudent ? 'Close Form' : 'Add New Student'}
-        </Button>
-        <Link to="/hods">
+      <Row gutter={[12, 12]} style={{ paddingBottom: 24 }}>
+        <Col xs={24} sm={12} lg={6}>
           <Button 
+            block
             type="primary" 
-            style={{ background: '#3b82f6', borderColor: '#3b82f6', borderRadius: 8, height: 40, fontWeight: 500 }}
+            onClick={getMentors} 
+            style={{ background: '#0ea5e9', borderColor: '#0ea5e9', borderRadius: 8, height: 40, fontWeight: 500 }}
           >
-            Manage HOD Profiles
+            View All Mentors
           </Button>
-        </Link>
-      </Space>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Button 
+            block
+            type="primary" 
+            onClick={() => {
+              setShowAddMentor(!showAddMentor);
+              if (!showAddMentor) setShowAddStudent(false);
+            }} 
+            style={{ background: '#10b981', borderColor: '#10b981', borderRadius: 8, height: 40, fontWeight: 500 }}
+          >
+            {showAddMentor ? 'Close Form' : 'Add New Mentor'}
+          </Button>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Button 
+            block
+            type="primary" 
+            onClick={() => {
+              setShowAddStudent(!showAddStudent);
+              if (!showAddStudent) setShowAddMentor(false);
+            }} 
+            style={{ background: '#8b5cf6', borderColor: '#8b5cf6', borderRadius: 8, height: 40, fontWeight: 500 }}
+          >
+            {showAddStudent ? 'Close Form' : 'Add New Student'}
+          </Button>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Link to="/hods" style={{ width: '100%', display: 'block' }}>
+            <Button 
+              block
+              type="primary" 
+              style={{ background: '#3b82f6', borderColor: '#3b82f6', borderRadius: 8, height: 40, fontWeight: 500 }}
+            >
+              Manage HOD Profiles
+            </Button>
+          </Link>
+        </Col>
+      </Row>
       
       {showAddMentor && (
         <Card style={{ marginBottom: 24, background: '#f8fafc', borderRadius: 12, borderColor: '#e2e8f0' }}>

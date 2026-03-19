@@ -51,17 +51,21 @@ function InterventionForm({ studentId, onInterventionAdded, onCancel, interventi
       </Title>
 
       <Form form={form} layout="vertical" onFinish={onFinish}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
-          <Form.Item label="Month/Year" name="monthYear" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="Category" name="category" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="Slow learner">Slow learner</Select.Option>
-              <Select.Option value="Fast learner">Fast learner</Select.Option>
-            </Select>
-          </Form.Item>
-        </div>
+        <Row gutter={16}>
+          <Col xs={24} sm={12}>
+            <Form.Item label="Month/Year" name="monthYear" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Form.Item label="Category" name="category" rules={[{ required: true }]}>
+              <Select>
+                <Select.Option value="Slow learner">Slow learner</Select.Option>
+                <Select.Option value="Fast learner">Fast learner</Select.Option>
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
         
         <Form.Item label="Action Taken" name="actionTaken" rules={[{ required: true }]}>
           <TextArea rows={3} />

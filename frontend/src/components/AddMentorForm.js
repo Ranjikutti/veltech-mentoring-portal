@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import api from 'api';
-import { Form, Input, Button, message, Typography } from 'antd';
+import { Form, Input, Button, message, Typography, Row, Col } from 'antd';
 
 const { Title } = Typography;
 
@@ -32,43 +32,51 @@ function AddMentorForm({ onMentorAdded }) {
         onFinish={onFinish}
         size="large"
       >
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '0 16px' }}>
-          <Form.Item 
-            label={<span style={{ fontWeight: 600, color: '#334155' }}>Name</span>} 
-            name="name" 
-            rules={[{ required: true, message: 'Please input the mentor name!' }]}
-          >
-            <Input placeholder="Enter mentor name" style={{ borderRadius: 8 }} />
-          </Form.Item>
+        <Row gutter={16}>
+          <Col xs={24} sm={12}>
+            <Form.Item 
+              label={<span style={{ fontWeight: 600, color: '#334155' }}>Name</span>} 
+              name="name" 
+              rules={[{ required: true, message: 'Please input the mentor name!' }]}
+            >
+              <Input placeholder="Enter mentor name" style={{ borderRadius: 8 }} />
+            </Form.Item>
+          </Col>
 
-          <Form.Item 
-            label={<span style={{ fontWeight: 600, color: '#334155' }}>Email</span>} 
-            name="email" 
-            rules={[
-              { required: true, message: 'Please input the mentor email!' },
-              { type: 'email', message: 'Please enter a valid email!' }
-            ]}
-          >
-            <Input placeholder="Enter mentor email" style={{ borderRadius: 8 }} />
-          </Form.Item>
+          <Col xs={24} sm={12}>
+            <Form.Item 
+              label={<span style={{ fontWeight: 600, color: '#334155' }}>Email</span>} 
+              name="email" 
+              rules={[
+                { required: true, message: 'Please input the mentor email!' },
+                { type: 'email', message: 'Please enter a valid email!' }
+              ]}
+            >
+              <Input placeholder="Enter mentor email" style={{ borderRadius: 8 }} />
+            </Form.Item>
+          </Col>
 
-          <Form.Item 
-            label={<span style={{ fontWeight: 600, color: '#334155' }}>MTS Number (e.g., mts003)</span>} 
-            name="mtsNumber" 
-            rules={[{ required: true, message: 'Please input the MTS number!' }]}
-          >
-            <Input placeholder="e.g. MTS1234" style={{ borderRadius: 8 }} />
-          </Form.Item>
+          <Col xs={24} sm={12}>
+            <Form.Item 
+              label={<span style={{ fontWeight: 600, color: '#334155' }}>MTS Number (e.g., mts003)</span>} 
+              name="mtsNumber" 
+              rules={[{ required: true, message: 'Please input the MTS number!' }]}
+            >
+              <Input placeholder="e.g. MTS1234" style={{ borderRadius: 8 }} />
+            </Form.Item>
+          </Col>
 
-          <Form.Item 
-            label={<span style={{ fontWeight: 600, color: '#334155' }}>Designation</span>} 
-            name="designation" 
-            rules={[{ required: true, message: 'Please input the designation!' }]}
-          >
-            <Input placeholder="e.g. Assistant Professor" style={{ borderRadius: 8 }} />
-          </Form.Item>
+          <Col xs={24} sm={12}>
+            <Form.Item 
+              label={<span style={{ fontWeight: 600, color: '#334155' }}>Designation</span>} 
+              name="designation" 
+              rules={[{ required: true, message: 'Please input the designation!' }]}
+            >
+              <Input placeholder="e.g. Assistant Professor" style={{ borderRadius: 8 }} />
+            </Form.Item>
+          </Col>
           
-          <div style={{ gridColumn: '1 / -1' }}>
+          <Col xs={24}>
             <Form.Item 
               label={<span style={{ fontWeight: 600, color: '#334155' }}>Initial Password</span>} 
               name="password" 
@@ -76,8 +84,8 @@ function AddMentorForm({ onMentorAdded }) {
             >
               <Input.Password placeholder="Create a password" style={{ borderRadius: 8 }} />
             </Form.Item>
-          </div>
-        </div>
+          </Col>
+        </Row>
 
         <Form.Item style={{ marginTop: 16, marginBottom: 0 }}>
           <Button type="primary" htmlType="submit" loading={saving} style={{ background: '#0ea5e9', borderColor: '#0ea5e9', borderRadius: 8, fontWeight: 600 }}>

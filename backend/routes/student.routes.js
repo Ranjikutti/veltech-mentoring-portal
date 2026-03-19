@@ -132,7 +132,39 @@ router.get('/:studentId/details', protect, async (req, res) => {
 });
 
 // -----------------------------------------------------------
-// ROUTE 5: Re-assign a new mentor to a student (HOD ONLY)
+// ROUTE 5: Update a student's profile (Mentor or HOD)
+// -----------------------------------------------------------
+router.put('/:studentId', protect, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const user = req.user;
+    const updateData = req.body;
+
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found.' });
+    }
+
+    if (user.role !== 'hod' && !student.currentMentor.equals(user._id)) {
+      return res.status(403).json({ message: 'You are not authorized to update this student.' });
+    }
+
+    // Protect certain fields from being updated directly by arbitrary requests if necessary
+    // Example: currentMentor, department shouldn't be updated here usually, but doing Object.assign is easiest.
+    Object.assign(student, updateData);
+
+    const updatedStudent = await student.save();
+    res.status(200).json(updatedStudent);
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Student with this Register Number or VM Number already exists.' });
+    }
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// -----------------------------------------------------------
+// ROUTE 6: Re-assign a new mentor to a student (HOD ONLY)
 // -----------------------------------------------------------
 router.put('/:studentId/assign-mentor', protect, isHod, async (req, res) => {
   try {

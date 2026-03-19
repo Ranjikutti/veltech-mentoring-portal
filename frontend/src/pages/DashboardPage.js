@@ -38,7 +38,7 @@ function DashboardPage() {
         </Space>
       </Header>
 
-      <Content style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '32px 24px' }}>
+      <Content style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '24px 16px' }}>
         <div style={{ marginBottom: 24 }}>
           <Title level={3} style={{ margin: 0, color: '#0f172a' }}>Welcome, {user.name}</Title>
         </div>

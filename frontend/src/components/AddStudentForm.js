@@ -131,95 +131,9 @@ function AddStudentForm({ onStudentAdded }) {
           <Col xs={24} sm={24}><Form.Item label="Mentor's MTS Number" name="mentorMtsNumber" rules={[{ required: true }]}><Input /></Form.Item></Col>
         </Row>
 
-        {renderSectionTitle('Personal Details')}
-        <Row gutter={16}>
-          <Col xs={24} sm={8}><Form.Item label="Date of Birth" name="dateOfBirth"><Input type="date" /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Place of Birth" name="placeOfBirth"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Mother Tongue" name="motherTongue"><Input /></Form.Item></Col>
-        </Row>
-
-        {renderSectionTitle('Parents')}
-        <Row gutter={16}>
-          <Col xs={24} sm={8}><Form.Item label="Father Name" name="fatherName"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Father Qualification" name="fatherQualification"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Father Occupation" name="fatherOccupation"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Mother Name" name="motherName"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Mother Qualification" name="motherQualification"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Mother Occupation" name="motherOccupation"><Input /></Form.Item></Col>
-        </Row>
-
-        {renderSectionTitle('Permanent Address')}
-        <Row gutter={16}>
-          <Col xs={24} sm={8}><Form.Item label="Door No" name="permanentDoorNo"><Input /></Form.Item></Col>
-          <Col xs={24} sm={16}><Form.Item label="Street" name="permanentStreet"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Town/Village" name="permanentTownOrVillage"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Taluk" name="permanentTaluk"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="State" name="permanentState"><Input /></Form.Item></Col>
-        </Row>
-
-        {renderSectionTitle('Local Address')}
-        <Row gutter={16}>
-          <Col xs={24} sm={8}><Form.Item label="Door No" name="localDoorNo"><Input /></Form.Item></Col>
-          <Col xs={24} sm={16}><Form.Item label="Street" name="localStreet"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Town/Village" name="localTownOrVillage"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Taluk" name="localTaluk"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="State" name="localState"><Input /></Form.Item></Col>
-        </Row>
-
-        {renderSectionTitle('Contact & Health')}
-        <Row gutter={16}>
-          <Col xs={24} sm={8}><Form.Item label="Contact Number" name="contactNumber"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Landline" name="landline"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Email" name="email"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="General Health" name="generalHealth"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Eye Sight" name="eyeSight"><Input /></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Blood Group" name="bloodGroup"><Input /></Form.Item></Col>
-          <Col xs={24} sm={12}><Form.Item label="Other Deficiency" name="otherDeficiency"><Input /></Form.Item></Col>
-          <Col xs={24} sm={12}><Form.Item label="Illness (Last 3 Years)" name="illnessLastThreeYears"><Input /></Form.Item></Col>
-        </Row>
-
-        {renderSectionTitle('Academics – 10th')}
-        <Row gutter={16}>
-          <Col xs={24} sm={12}><Form.Item label="Board" name="tenthBoard"><Input /></Form.Item></Col>
-          <Col xs={24} sm={12}><Form.Item label="Year of Passing" name="tenthYearOfPassing"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="English (Secured)" name="tenthEnglishSecured"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="English (Max)" name="tenthEnglishMax"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="Maths (Secured)" name="tenthMathSecured"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="Maths (Max)" name="tenthMathMax"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="Physics (Secured)" name="tenthPhysicsSecured"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="Physics (Max)" name="tenthPhysicsMax"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="Chemistry (Secured)" name="tenthChemistrySecured"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="Chemistry (Max)" name="tenthChemistryMax"><Input /></Form.Item></Col>
-          <Col xs={12} sm={12}><Form.Item label="Total Secured" name="tenthTotalSecured"><Input /></Form.Item></Col>
-          <Col xs={12} sm={12}><Form.Item label="Total Max" name="tenthTotalMax"><Input /></Form.Item></Col>
-        </Row>
-
-        {renderSectionTitle('Academics – 12th')}
-        <Row gutter={16}>
-          <Col xs={24} sm={12}><Form.Item label="Board" name="twelfthBoard"><Input /></Form.Item></Col>
-          <Col xs={24} sm={12}><Form.Item label="Year of Passing" name="twelfthYearOfPassing"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="English (Secured)" name="twelfthEnglishSecured"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="English (Max)" name="twelfthEnglishMax"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="Maths (Secured)" name="twelfthMathSecured"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="Maths (Max)" name="twelfthMathMax"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="Physics (Secured)" name="twelfthPhysicsSecured"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="Physics (Max)" name="twelfthPhysicsMax"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="Chemistry (Secured)" name="twelfthChemistrySecured"><Input /></Form.Item></Col>
-          <Col xs={12} sm={6}><Form.Item label="Chemistry (Max)" name="twelfthChemistryMax"><Input /></Form.Item></Col>
-          <Col xs={12} sm={12}><Form.Item label="Total Secured" name="twelfthTotalSecured"><Input /></Form.Item></Col>
-          <Col xs={12} sm={12}><Form.Item label="Total Max" name="twelfthTotalMax"><Input /></Form.Item></Col>
-        </Row>
-
-        {renderSectionTitle('Achievements')}
-        <Row gutter={16}>
-          <Col xs={24} sm={8}><Form.Item label="Past" name="achievementsPast"><Input.TextArea rows={3}/></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Present" name="achievementsPresent"><Input.TextArea rows={3}/></Form.Item></Col>
-          <Col xs={24} sm={8}><Form.Item label="Features" name="achievementsFeatures"><Input.TextArea rows={3}/></Form.Item></Col>
-        </Row>
-
-        <Form.Item style={{ marginTop: 32, marginBottom: 0 }}>
+        <Form.Item style={{ marginTop: 24, marginBottom: 0 }}>
           <Button type="primary" htmlType="submit" loading={saving} style={{ background: '#0ea5e9', borderColor: '#0ea5e9', borderRadius: 8, fontWeight: 600, padding: '0 32px' }}>
-            {saving ? 'Adding...' : 'Add Student'}
+            {saving ? 'Creating...' : 'Create Student'}
           </Button>
         </Form.Item>
       </Form>
